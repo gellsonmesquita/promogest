@@ -31,31 +31,32 @@ admin@noblegroup.ao · marta.fernandes@ (gestora) · carlos.domingos@ / joana.be
 
 ## Deploy com Docker
 
-A imagem usa o modo `standalone` do Next.js (Node 22 Alpine, utilizador sem privilégios, healthcheck em `/api/health`). A base de dados é **externa** (PostgreSQL já existente) e não vai na imagem.
+Mesmo padrão já validado no Coolify (gcs-site): **um serviço**, `build: .`, `expose` (sem `ports`). A imagem usa o modo `standalone` do Next.js (Node 22 Debian slim). A base de dados é **externa** e não vai na imagem.
+
+Ao arrancar, o contentor corre `scripts/migrate.mjs` (aplica as migrações pendentes em `drizzle/`) e só depois inicia o servidor. Se faltar `DATABASE_URL` ou `SESSION_SECRET`, ou a BD não responder, o contentor termina com uma mensagem clara nos logs.
 
 | Ficheiro | Para quê |
 |---|---|
-| `Dockerfile` | Alvos `runner` (app) e `tools` (migrações/seed) |
+| `Dockerfile` | Build multi-stage → imagem final com o servidor + migrações |
 | `docker-compose.yml` | **Coolify** (Build Pack: Docker Compose) |
-| `docker-compose.local.yml` | Qualquer servidor com Docker, sem Coolify |
-| `scripts/migrate.mjs` | Corre no serviço `migrate` antes da app: aplica as migrações em `drizzle/` |
+| `docker-compose.local.yml` | Complemento para outro servidor: publica a porta |
+| `/api/health` | Estado da app e da BD (`?strict=1` → 503 se a BD falhar) |
 
 ### Coolify
 
-1. **New Resource → Public/Private Repository**, Build Pack **Docker Compose**, ficheiro `docker-compose.yml`.
+1. Recurso com Build Pack **Docker Compose**, ficheiro `docker-compose.yml`.
 2. **Environment Variables:**
-   - `DATABASE_URL`: obrigatória. Se o Postgres estiver no mesmo servidor Coolify, use o URL interno da BD (mais rápido e sem expor a porta).
-   - `SESSION_SECRET`: opcional; se ficar vazia, o Coolify gera e guarda um valor (`SERVICE_PASSWORD_64_SESSION`).
-   - `SEED_DEMO=true`: só no primeiro deploy, para carregar os dados de demonstração. Só atua com a BD vazia e nunca apaga dados.
-3. No serviço **app**, definir o domínio (o encaminhamento vai para a porta 3000 via `SERVICE_URL_APP_3000`) e fazer **Deploy**.
+   - `DATABASE_URL`: se o Postgres estiver no mesmo servidor Coolify, use o URL interno da BD (mais rápido e sem expor a porta).
+   - `SESSION_SECRET`: string aleatória longa (`node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"`).
+3. No serviço **app**, definir o domínio com a porta 3000 (ex.: `https://promogest.exemplo.ao:3000`) e fazer **Deploy**.
 
-Em cada deploy, o serviço `migrate` aplica as migrações pendentes e termina (`exclude_from_hc`). A `app` só arranca se as migrações tiverem sucesso.
+Dados de demonstração (opcional, a partir da sua máquina, com `DATABASE_URL` da BD no `.env.local`): `npm run db:seed`.
 
 ### Outro servidor
 
 ```bash
 cp .env.example .env          # preencher DATABASE_URL e SESSION_SECRET
-docker compose -f docker-compose.local.yml up -d --build
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
 ```
 
 ## Estrutura
