@@ -24,7 +24,7 @@
 }
 
 @theme inline {
-  --font-sans: var(--font-manrope), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "Manrope Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 html,
