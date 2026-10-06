@@ -1,0 +1,113 @@
+import { and, eq, inArray } from 'drizzle-orm';
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Icon, StatusBadge } from '@/components/ui';
+import { db } from '@/db';
+import { relatorios } from '@/db/schema';
+import { FIELD_ROLES, requireUser } from '@/lib/auth';
+import { fmtDia, hm, hoje } from '@/lib/dates';
+import { getRefs, listEscalas } from '@/lib/queries';
+
+export const metadata: Metadata = { title: 'Hoje' };
+
+export default async function HojePage() {
+  const u = await requireUser(FIELD_ROLES);
+  const dia = hoje();
+  const [refs, escalas, rejeitados] = await Promise.all([
+    getRefs(),
+    listEscalas(u, { de: dia }),
+    db.select({ id: relatorios.id }).from(relatorios).where(and(eq(relatorios.autorId, u.id), eq(relatorios.estado, 'rejeitado'))),
+  ]);
+  const ativas = escalas.filter((e) => e.estado !== 'cancelada' && e.estado !== 'substituida');
+  const deHoje = ativas.filter((e) => e.data === dia);
+  const proximas = ativas.filter((e) => e.data > dia).slice(0, 10);
+  const rels = deHoje.length ? await db.select({ escalaId: relatorios.escalaId, estado: relatorios.estado }).from(relatorios).where(inArray(relatorios.escalaId, deHoje.map((e) => e.id))) : [];
+
+  const cta = (estado: string, rel?: string) => {
+    if (rel === 'rejeitado') return 'Corrigir relatório';
+    if (rel && rel !== 'rascunho') return 'Ver relatório';
+    if (estado === 'planeada') return 'Abrir e confirmar presença';
+    if (estado === 'falta') return 'Ver detalhes';
+    return 'Continuar atividade';
+  };
+
+  return (
+    <>
+      <header className="hoje-hero">
+        <div className="row">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.webp" alt="" className="hoje-logo" />
+          <div className="spacer" />
+          <span className="hoje-date">{fmtDia(dia, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+        </div>
+        <h1>Olá, {u.nome.split(' ')[0]} 👋</h1>
+        <p>{deHoje.length ? `Tem ${deHoje.length} atividade(s) hoje.` : 'Sem atividades para hoje.'}</p>
+      </header>
+
+      <div className="m-body">
+        {rejeitados.length > 0 && (
+          <Link className="alert bad row" href={`/m/relatorios/${rejeitados[0].id}`}>
+            <Icon name="warn" />
+            <span style={{ flex: 1 }}>{rejeitados.length} relatório(s) rejeitado(s): corrija e reenvie.</span>
+            <Icon name="chevron" />
+          </Link>
+        )}
+
+        <h2 className="hoje-sec">Hoje</h2>
+        {deHoje.length === 0 && <div className="card empty">Dia livre. Aproveite! 🌴</div>}
+        {deHoje.map((e) => {
+          const s = refs.servicos.get(e.servicoId);
+          const rel = rels.find((r) => r.escalaId === e.id)?.estado;
+          return (
+            <Link key={e.id} href={`/m/atividade/${e.id}`} className="card hoje-act">
+              <div className="row">
+                <span className="hoje-time">{hm(e.horaInicio)}<small>–{hm(e.horaFim)}</small></span>
+                <span className="spacer" />
+                <StatusBadge value={rel && rel !== 'rascunho' ? rel : e.estado} />
+              </div>
+              <div className="hoje-title">{s?.nome}</div>
+              <div className="row" style={{ gap: 6 }}><Icon name="pin" size={16} /> {refs.pdvs.get(e.pdvId)?.nome}</div>
+              <div className="row muted" style={{ gap: 6 }}><Icon name="campaign" size={16} /> {refs.marcas.get(s?.marcaId ?? '')?.nome} · {s?.produto}</div>
+              <div className="hoje-cta">{cta(e.estado, rel)} <Icon name="chevron" size={18} /></div>
+            </Link>
+          );
+        })}
+
+        <h2 className="hoje-sec">Próximos dias</h2>
+        <div className="card" style={{ padding: '4px 14px' }}>
+          <div className="list">
+            {proximas.length === 0 && <div className="empty">Sem escalas futuras.</div>}
+            {proximas.map((e) => (
+              <Link key={e.id} href={`/m/atividade/${e.id}`} className="item">
+                <div className="hoje-day">
+                  <b>{fmtDia(e.data, { day: '2-digit' })}</b>
+                  <span>{fmtDia(e.data, { weekday: 'short' })}</span>
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="strong">{refs.servicos.get(e.servicoId)?.nome}</div>
+                  <div className="small muted">{hm(e.horaInicio)}–{hm(e.horaFim)} · {refs.pdvs.get(e.pdvId)?.nome}</div>
+                </div>
+                <Icon name="chevron" size={18} style={{ color: 'var(--muted)' }} />
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+      <style>{`
+        .hoje-hero { background: radial-gradient(circle at 80% 0, #3a3123, #16130f 70%); color: #fff; padding: calc(18px + env(safe-area-inset-top, 0px)) 18px 26px; border-radius: 0 0 26px 26px; }
+        .hoje-logo { width: 38px; height: 38px; border-radius: 10px; background: #fff; padding: 3px; object-fit: contain; }
+        .hoje-date { color: #e6c779; font-weight: 700; text-transform: capitalize; }
+        .hoje-hero h1 { font-size: 26px; font-weight: 800; margin-top: 18px; }
+        .hoje-hero p { color: #c9bda4; margin-top: 6px; }
+        .hoje-sec { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-top: 8px; font-weight: 700; }
+        .hoje-act { display: flex; flex-direction: column; gap: 6px; color: var(--ink); border-left: 4px solid var(--gold); }
+        .hoje-time { font-size: 22px; font-weight: 800; }
+        .hoje-time small { font-size: 14px; color: var(--muted); font-weight: 600; }
+        .hoje-title { font-size: 17px; font-weight: 800; }
+        .hoje-cta { margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: var(--gold); color: #fff; font-weight: 800; padding: 12px 14px; border-radius: 12px; font-size: 15px; }
+        .hoje-day { width: 44px; text-align: center; display: flex; flex-direction: column; background: var(--gold-50); border-radius: 10px; padding: 4px 0; flex: none; }
+        .hoje-day b { font-size: 17px; } .hoje-day span { font-size: 11px; color: var(--muted); text-transform: uppercase; }
+      `}</style>
+    </>
+  );
+}

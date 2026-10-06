@@ -1,0 +1,1621 @@
+{
+  "id": "4d3fd5e6-958e-4d25-b0b6-744ed4f10196",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.auditoria": {
+      "name": "auditoria",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "data": {
+          "name": "data",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "acao": {
+          "name": "acao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "entidade": {
+          "name": "entidade",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "detalhe": {
+          "name": "detalhe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "auditoria_user_id_users_id_fk": {
+          "name": "auditoria_user_id_users_id_fk",
+          "tableFrom": "auditoria",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.clientes": {
+      "name": "clientes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nif": {
+          "name": "nif",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "responsavel": {
+          "name": "responsavel",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "contacto": {
+          "name": "contacto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "contratos": {
+          "name": "contratos",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "ativo": {
+          "name": "ativo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.equipas": {
+      "name": "equipas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "area": {
+          "name": "area",
+          "type": "area",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "supervisor_id": {
+          "name": "supervisor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ativa": {
+          "name": "ativa",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "equipas_supervisor_id_users_id_fk": {
+          "name": "equipas_supervisor_id_users_id_fk",
+          "tableFrom": "equipas",
+          "tableTo": "users",
+          "columnsFrom": [
+            "supervisor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.escala_historico": {
+      "name": "escala_historico",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "escala_id": {
+          "name": "escala_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "texto": {
+          "name": "texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data": {
+          "name": "data",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "escala_historico_escala_id_escalas_id_fk": {
+          "name": "escala_historico_escala_id_escalas_id_fk",
+          "tableFrom": "escala_historico",
+          "tableTo": "escalas",
+          "columnsFrom": [
+            "escala_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "escala_historico_user_id_users_id_fk": {
+          "name": "escala_historico_user_id_users_id_fk",
+          "tableFrom": "escala_historico",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.escalas": {
+      "name": "escalas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "servico_id": {
+          "name": "servico_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pdv_id": {
+          "name": "pdv_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "promotora_id": {
+          "name": "promotora_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "supervisor_id": {
+          "name": "supervisor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data": {
+          "name": "data",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora_inicio": {
+          "name": "hora_inicio",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hora_fim": {
+          "name": "hora_fim",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "estado_escala",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'planeada'"
+        },
+        "presenca_estado": {
+          "name": "presenca_estado",
+          "type": "estado_presenca",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "presenca_hora": {
+          "name": "presenca_hora",
+          "type": "time",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "presenca_validada": {
+          "name": "presenca_validada",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "inicio_atividade": {
+          "name": "inicio_atividade",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fim_atividade": {
+          "name": "fim_atividade",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "substituta_id": {
+          "name": "substituta_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "escalas_data_idx": {
+          "name": "escalas_data_idx",
+          "columns": [
+            {
+              "expression": "data",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "escalas_promotora_idx": {
+          "name": "escalas_promotora_idx",
+          "columns": [
+            {
+              "expression": "promotora_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "escalas_supervisor_idx": {
+          "name": "escalas_supervisor_idx",
+          "columns": [
+            {
+              "expression": "supervisor_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "escalas_servico_id_servicos_id_fk": {
+          "name": "escalas_servico_id_servicos_id_fk",
+          "tableFrom": "escalas",
+          "tableTo": "servicos",
+          "columnsFrom": [
+            "servico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "escalas_pdv_id_pdvs_id_fk": {
+          "name": "escalas_pdv_id_pdvs_id_fk",
+          "tableFrom": "escalas",
+          "tableTo": "pdvs",
+          "columnsFrom": [
+            "pdv_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "escalas_promotora_id_users_id_fk": {
+          "name": "escalas_promotora_id_users_id_fk",
+          "tableFrom": "escalas",
+          "tableTo": "users",
+          "columnsFrom": [
+            "promotora_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "escalas_supervisor_id_users_id_fk": {
+          "name": "escalas_supervisor_id_users_id_fk",
+          "tableFrom": "escalas",
+          "tableTo": "users",
+          "columnsFrom": [
+            "supervisor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "escalas_substituta_id_users_id_fk": {
+          "name": "escalas_substituta_id_users_id_fk",
+          "tableFrom": "escalas",
+          "tableTo": "users",
+          "columnsFrom": [
+            "substituta_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.fotos": {
+      "name": "fotos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "relatorio_id": {
+          "name": "relatorio_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "autor_id": {
+          "name": "autor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fase": {
+          "name": "fase",
+          "type": "fase_foto",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'geral'"
+        },
+        "legenda": {
+          "name": "legenda",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "mime": {
+          "name": "mime",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tamanho": {
+          "name": "tamanho",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dados": {
+          "name": "dados",
+          "type": "bytea",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "capturada_em": {
+          "name": "capturada_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "fotos_relatorio_id_relatorios_id_fk": {
+          "name": "fotos_relatorio_id_relatorios_id_fk",
+          "tableFrom": "fotos",
+          "tableTo": "relatorios",
+          "columnsFrom": [
+            "relatorio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fotos_autor_id_users_id_fk": {
+          "name": "fotos_autor_id_users_id_fk",
+          "tableFrom": "fotos",
+          "tableTo": "users",
+          "columnsFrom": [
+            "autor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.marcas": {
+      "name": "marcas",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "cliente_id": {
+          "name": "cliente_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "produtos": {
+          "name": "produtos",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "marcas_cliente_id_clientes_id_fk": {
+          "name": "marcas_cliente_id_clientes_id_fk",
+          "tableFrom": "marcas",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.notificacoes": {
+      "name": "notificacoes",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "texto": {
+          "name": "texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "link": {
+          "name": "link",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lida": {
+          "name": "lida",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "data": {
+          "name": "data",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "notificacoes_user_idx": {
+          "name": "notificacoes_user_idx",
+          "columns": [
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "notificacoes_user_id_users_id_fk": {
+          "name": "notificacoes_user_id_users_id_fk",
+          "tableFrom": "notificacoes",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ocorrencias": {
+      "name": "ocorrencias",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "escala_id": {
+          "name": "escala_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "autor_id": {
+          "name": "autor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "texto": {
+          "name": "texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data": {
+          "name": "data",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "resolvida": {
+          "name": "resolvida",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "ocorrencias_escala_id_escalas_id_fk": {
+          "name": "ocorrencias_escala_id_escalas_id_fk",
+          "tableFrom": "ocorrencias",
+          "tableTo": "escalas",
+          "columnsFrom": [
+            "escala_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "ocorrencias_autor_id_users_id_fk": {
+          "name": "ocorrencias_autor_id_users_id_fk",
+          "tableFrom": "ocorrencias",
+          "tableTo": "users",
+          "columnsFrom": [
+            "autor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.pdvs": {
+      "name": "pdvs",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "endereco": {
+          "name": "endereco",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "zona": {
+          "name": "zona",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "ativo": {
+          "name": "ativo",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.relatorio_historico": {
+      "name": "relatorio_historico",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "relatorio_id": {
+          "name": "relatorio_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "texto": {
+          "name": "texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "data": {
+          "name": "data",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "relatorio_historico_relatorio_id_relatorios_id_fk": {
+          "name": "relatorio_historico_relatorio_id_relatorios_id_fk",
+          "tableFrom": "relatorio_historico",
+          "tableTo": "relatorios",
+          "columnsFrom": [
+            "relatorio_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "relatorio_historico_user_id_users_id_fk": {
+          "name": "relatorio_historico_user_id_users_id_fk",
+          "tableFrom": "relatorio_historico",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.relatorios": {
+      "name": "relatorios",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "escala_id": {
+          "name": "escala_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "servico_id": {
+          "name": "servico_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "autor_id": {
+          "name": "autor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "tipo_relatorio",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "estado_relatorio",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'rascunho'"
+        },
+        "atividade": {
+          "name": "atividade",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "quantidade": {
+          "name": "quantidade",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "resultados": {
+          "name": "resultados",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "material": {
+          "name": "material",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "checklist": {
+          "name": "checklist",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "observacoes": {
+          "name": "observacoes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "ocorrencias": {
+          "name": "ocorrencias",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "motivo_rejeicao": {
+          "name": "motivo_rejeicao",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "feedback": {
+          "name": "feedback",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "enviado_em": {
+          "name": "enviado_em",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "relatorios_escala_id_escalas_id_fk": {
+          "name": "relatorios_escala_id_escalas_id_fk",
+          "tableFrom": "relatorios",
+          "tableTo": "escalas",
+          "columnsFrom": [
+            "escala_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "relatorios_servico_id_servicos_id_fk": {
+          "name": "relatorios_servico_id_servicos_id_fk",
+          "tableFrom": "relatorios",
+          "tableTo": "servicos",
+          "columnsFrom": [
+            "servico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "relatorios_autor_id_users_id_fk": {
+          "name": "relatorios_autor_id_users_id_fk",
+          "tableFrom": "relatorios",
+          "tableTo": "users",
+          "columnsFrom": [
+            "autor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "relatorios_escala_id_unique": {
+          "name": "relatorios_escala_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "escala_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.servico_pdvs": {
+      "name": "servico_pdvs",
+      "schema": "",
+      "columns": {
+        "servico_id": {
+          "name": "servico_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "pdv_id": {
+          "name": "pdv_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "servico_pdvs_servico_id_servicos_id_fk": {
+          "name": "servico_pdvs_servico_id_servicos_id_fk",
+          "tableFrom": "servico_pdvs",
+          "tableTo": "servicos",
+          "columnsFrom": [
+            "servico_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "servico_pdvs_pdv_id_pdvs_id_fk": {
+          "name": "servico_pdvs_pdv_id_pdvs_id_fk",
+          "tableFrom": "servico_pdvs",
+          "tableTo": "pdvs",
+          "columnsFrom": [
+            "pdv_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "servico_pdvs_servico_id_pdv_id_pk": {
+          "name": "servico_pdvs_servico_id_pdv_id_pk",
+          "columns": [
+            "servico_id",
+            "pdv_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.servicos": {
+      "name": "servicos",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "servico_tipo",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cliente_id": {
+          "name": "cliente_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marca_id": {
+          "name": "marca_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "produto": {
+          "name": "produto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "objetivo": {
+          "name": "objetivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "meta": {
+          "name": "meta",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "inicio": {
+          "name": "inicio",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fim": {
+          "name": "fim",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "zona": {
+          "name": "zona",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "supervisor_id": {
+          "name": "supervisor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "equipa_id": {
+          "name": "equipa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "materiais": {
+          "name": "materiais",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "observacoes": {
+          "name": "observacoes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "checklist": {
+          "name": "checklist",
+          "type": "text[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
+        },
+        "estado": {
+          "name": "estado",
+          "type": "estado_servico",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'rascunho'"
+        },
+        "acao": {
+          "name": "acao",
+          "type": "acao_merch",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "qtd_prevista": {
+          "name": "qtd_prevista",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "servicos_cliente_id_clientes_id_fk": {
+          "name": "servicos_cliente_id_clientes_id_fk",
+          "tableFrom": "servicos",
+          "tableTo": "clientes",
+          "columnsFrom": [
+            "cliente_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "servicos_marca_id_marcas_id_fk": {
+          "name": "servicos_marca_id_marcas_id_fk",
+          "tableFrom": "servicos",
+          "tableTo": "marcas",
+          "columnsFrom": [
+            "marca_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "servicos_supervisor_id_users_id_fk": {
+          "name": "servicos_supervisor_id_users_id_fk",
+          "tableFrom": "servicos",
+          "tableTo": "users",
+          "columnsFrom": [
+            "supervisor_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "servicos_equipa_id_equipas_id_fk": {
+          "name": "servicos_equipa_id_equipas_id_fk",
+          "tableFrom": "servicos",
+          "tableTo": "equipas",
+          "columnsFrom": [
+            "equipa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nome": {
+          "name": "nome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "telefone": {
+          "name": "telefone",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "password_hash": {
+          "name": "password_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "equipa_id": {
+          "name": "equipa_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "zona": {
+          "name": "zona",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "estado": {
+          "name": "estado",
+          "type": "estado_pessoa",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ativa'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "users_equipa_id_equipas_id_fk": {
+          "name": "users_equipa_id_equipas_id_fk",
+          "tableFrom": "users",
+          "tableTo": "equipas",
+          "columnsFrom": [
+            "equipa_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_email_unique": {
+          "name": "users_email_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "public.acao_merch": {
+      "name": "acao_merch",
+      "schema": "public",
+      "values": [
+        "montagem",
+        "exposicao",
+        "reposicao",
+        "implementacao",
+        "auditoria",
+        "manutencao",
+        "outro"
+      ]
+    },
+    "public.area": {
+      "name": "area",
+      "schema": "public",
+      "values": [
+        "promocao",
+        "merchandising"
+      ]
+    },
+    "public.estado_escala": {
+      "name": "estado_escala",
+      "schema": "public",
+      "values": [
+        "planeada",
+        "confirmada",
+        "executada",
+        "falta",
+        "substituida",
+        "cancelada"
+      ]
+    },
+    "public.estado_pessoa": {
+      "name": "estado_pessoa",
+      "schema": "public",
+      "values": [
+        "ativa",
+        "inativa",
+        "suspensa"
+      ]
+    },
+    "public.estado_presenca": {
+      "name": "estado_presenca",
+      "schema": "public",
+      "values": [
+        "presente",
+        "atrasado",
+        "falta",
+        "substituido",
+        "cancelado"
+      ]
+    },
+    "public.estado_relatorio": {
+      "name": "estado_relatorio",
+      "schema": "public",
+      "values": [
+        "rascunho",
+        "enviado",
+        "em_analise",
+        "aprovado",
+        "rejeitado",
+        "reenviado"
+      ]
+    },
+    "public.estado_servico": {
+      "name": "estado_servico",
+      "schema": "public",
+      "values": [
+        "rascunho",
+        "planeado",
+        "em_execucao",
+        "concluido",
+        "cancelado"
+      ]
+    },
+    "public.fase_foto": {
+      "name": "fase_foto",
+      "schema": "public",
+      "values": [
+        "antes",
+        "durante",
+        "depois",
+        "geral"
+      ]
+    },
+    "public.role": {
+      "name": "role",
+      "schema": "public",
+      "values": [
+        "admin",
+        "gestor",
+        "supervisor",
+        "promotora",
+        "merchandiser"
+      ]
+    },
+    "public.servico_tipo": {
+      "name": "servico_tipo",
+      "schema": "public",
+      "values": [
+        "campanha",
+        "ativacao",
+        "evento",
+        "merchandising",
+        "degustacao",
+        "panfletagem",
+        "exposicao",
+        "auditoria"
+      ]
+    },
+    "public.tipo_relatorio": {
+      "name": "tipo_relatorio",
+      "schema": "public",
+      "values": [
+        "promotora",
+        "merchandising"
+      ]
+    }
+  },
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
