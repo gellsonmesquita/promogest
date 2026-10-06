@@ -1,0 +1,49 @@
+# PromoGest · Docker Compose (pensado para Coolify — Build Pack "Docker Compose")
+#
+# Usa uma base de dados PostgreSQL EXTERNA (já existente): defina DATABASE_URL.
+#
+# No Coolify:
+#   1. New Resource → Git repository → Build Pack: Docker Compose (ficheiro: docker-compose.yml)
+#   2. Environment Variables: preencher DATABASE_URL (SESSION_SECRET é gerado automaticamente)
+#   3. Em "app", definir o domínio (ex.: https://promogest.noblegroup.ao) → Deploy
+#
+# Fora do Coolify (qualquer servidor com Docker), use o ficheiro local
+# (este contém chaves específicas do Coolify, como exclude_from_hc):
+#   docker compose -f docker-compose.local.yml up -d --build
+
+services:
+  # Aplica as migrações da BD e termina. A app só arranca depois disto ter sucesso.
+  migrate:
+    build:
+      context: .
+      target: tools
+    environment:
+      - DATABASE_URL=${DATABASE_URL:?Defina DATABASE_URL (postgres://user:pass@host:porta/bd)}
+      # true = carrega dados de demonstração SE a BD estiver vazia (nunca apaga dados)
+      - SEED_DEMO=${SEED_DEMO:-false}
+    restart: "no"
+    exclude_from_hc: true
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    expose:
+      - "3000"
+    environment:
+      # Coolify: encaminha o domínio configurado para a porta 3000 deste serviço
+      - SERVICE_URL_APP_3000
+      - DATABASE_URL=${DATABASE_URL:?Defina DATABASE_URL (postgres://user:pass@host:porta/bd)}
+      # Se não for definido, o Coolify gera um segredo de 64 caracteres (mantém-se entre deploys)
+      - SESSION_SECRET=${SESSION_SECRET:-${SERVICE_PASSWORD_64_SESSION}}
+      - TZ=Africa/Luanda
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 8s
+      start_period: 30s
+      retries: 3

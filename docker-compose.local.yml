@@ -1,0 +1,29 @@
+# Para correr fora do Coolify, em qualquer servidor com Docker (sem proxy):
+#   cp .env.example .env    # preencher DATABASE_URL e SESSION_SECRET
+#   docker compose -f docker-compose.local.yml up -d --build
+# Usa a base de dados PostgreSQL externa indicada em DATABASE_URL.
+
+services:
+  migrate:
+    build:
+      context: .
+      target: tools
+    environment:
+      - DATABASE_URL=${DATABASE_URL:?Defina DATABASE_URL no .env}
+      - SEED_DEMO=${SEED_DEMO:-false}
+    restart: "no"
+
+  app:
+    build:
+      context: .
+      target: runner
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:?Defina DATABASE_URL no .env}
+      - SESSION_SECRET=${SESSION_SECRET:?Defina SESSION_SECRET no .env (string aleatória longa)}
+      - TZ=Africa/Luanda
+    depends_on:
+      migrate:
+        condition: service_completed_successfully

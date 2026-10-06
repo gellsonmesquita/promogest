@@ -29,6 +29,35 @@ Todas com a palavra-passe `Noble@2026` (definida em `src/db/seed.ts`). **Só par
 
 admin@noblegroup.ao · marta.fernandes@ (gestora) · carlos.domingos@ / joana.bento@ / paulo.neto@ (supervisores) · ana.lopes@, beatriz.sousa@, celeste.mateus@, diana.kiala@, esperanca.joao@ (promotoras) · gaspar.manuel@, helder.tomas@ (merchandising). Todos com o domínio `@noblegroup.ao`.
 
+## Deploy com Docker
+
+A imagem usa o modo `standalone` do Next.js (Node 22 Alpine, utilizador sem privilégios, healthcheck em `/api/health`). A base de dados é **externa** (PostgreSQL já existente) e não vai na imagem.
+
+| Ficheiro | Para quê |
+|---|---|
+| `Dockerfile` | Alvos `runner` (app) e `tools` (migrações/seed) |
+| `docker-compose.yml` | **Coolify** (Build Pack: Docker Compose) |
+| `docker-compose.local.yml` | Qualquer servidor com Docker, sem Coolify |
+| `scripts/migrate.mjs` | Corre no serviço `migrate` antes da app: aplica as migrações em `drizzle/` |
+
+### Coolify
+
+1. **New Resource → Public/Private Repository**, Build Pack **Docker Compose**, ficheiro `docker-compose.yml`.
+2. **Environment Variables:**
+   - `DATABASE_URL`: obrigatória. Se o Postgres estiver no mesmo servidor Coolify, use o URL interno da BD (mais rápido e sem expor a porta).
+   - `SESSION_SECRET`: opcional; se ficar vazia, o Coolify gera e guarda um valor (`SERVICE_PASSWORD_64_SESSION`).
+   - `SEED_DEMO=true`: só no primeiro deploy, para carregar os dados de demonstração. Só atua com a BD vazia e nunca apaga dados.
+3. No serviço **app**, definir o domínio (o encaminhamento vai para a porta 3000 via `SERVICE_URL_APP_3000`) e fazer **Deploy**.
+
+Em cada deploy, o serviço `migrate` aplica as migrações pendentes e termina (`exclude_from_hc`). A `app` só arranca se as migrações tiverem sucesso.
+
+### Outro servidor
+
+```bash
+cp .env.example .env          # preencher DATABASE_URL e SESSION_SECRET
+docker compose -f docker-compose.local.yml up -d --build
+```
+
 ## Estrutura
 
 ```
