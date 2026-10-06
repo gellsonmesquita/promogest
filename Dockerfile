@@ -11,13 +11,8 @@ COPY package*.json ./
 # --include=dev: o build precisa de TypeScript/Tailwind mesmo que NODE_ENV=production venha do ambiente
 RUN npm ci --include=dev --no-audit --no-fund
 COPY . .
-# DIAGNÓSTICO TEMPORÁRIO: se o build falhar, a imagem é criada na mesma e o contentor imprime o log do build
-# (separador "Logs" do Coolify) em vez do servidor. Remover quando o deploy estiver estável.
-RUN node --version && npm --version && (npm run build > /tmp/build.log 2>&1; status=$?; cat /tmp/build.log; \
-    if [ $status -ne 0 ]; then \
-      mkdir -p .next/standalone .next/static && cp /tmp/build.log .next/standalone/BUILD_FAILED.log && \
-      echo "console.error('==== NEXT BUILD FALHOU ===='); console.error(require('fs').readFileSync(__dirname + '/BUILD_FAILED.log', 'utf8')); setTimeout(() => process.exit(1), 60000);" > .next/standalone/server.js; \
-    fi)
+# O build não precisa de DATABASE_URL/SESSION_SECRET (a ligação à BD só é criada em runtime).
+RUN npm run build
 
 # Stage 2: run
 FROM node:22-bookworm-slim
@@ -41,5 +36,4 @@ RUN chown -R node:node /app
 USER node
 EXPOSE 3000
 
-# (diagnóstico) se o build falhou, mostra logo o log; caso contrário migrações + servidor
-CMD ["sh", "-c", "if [ -f BUILD_FAILED.log ]; then exec node server.js; fi; node scripts/migrate.mjs && exec node server.js"]
+CMD ["sh", "-c", "node scripts/migrate.mjs && exec node server.js"]

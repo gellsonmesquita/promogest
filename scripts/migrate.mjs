@@ -4,8 +4,8 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 
 const url = process.env.DATABASE_URL;
-if (!url) {
-  console.error('[migrate] DATABASE_URL não definido.');
+if (!url || !/^postgres(ql)?:\/\//.test(url)) {
+  console.error('[migrate] DATABASE_URL em falta ou inválido (esperado postgres://user:pass@host:porta/bd).');
   process.exit(1);
 }
 if (!process.env.SESSION_SECRET) {
