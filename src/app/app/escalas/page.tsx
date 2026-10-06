@@ -1,17 +1,20 @@
 import { inArray } from 'drizzle-orm';
 import type { Metadata } from 'next';
-import { StatusBadge, PageHead } from '@/components/ui';
+import { PageHead, StatusBadge } from '@/components/ui';
 import { db } from '@/db';
 import { escalaHistorico } from '@/db/schema';
+import { getT } from '@/i18n/server';
 import { requireUser, WEB_ROLES } from '@/lib/auth';
 import { addDays, fmtDia, hm, hoje } from '@/lib/dates';
 import { equipaDeCampo, getRefs, listEscalas, listServicos, pdvsPorServico } from '@/lib/queries';
 import { EscalaRowActions, EscalasToolbar, NovaEscala } from './escalas-client';
 
-export const metadata: Metadata = { title: 'Escalas & Presenças' };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())('nav.escalas') };
+}
 
 export default async function EscalasPage({ searchParams }: PageProps<'/app/escalas'>) {
-  const u = await requireUser(WEB_ROLES);
+  const [u, t] = await Promise.all([requireUser(WEB_ROLES), getT()]);
   const sp = await searchParams;
   const vista = sp.vista === 'semana' ? 'semana' : 'dia';
   const data = typeof sp.data === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(sp.data) ? sp.data : hoje();
@@ -32,13 +35,12 @@ export default async function EscalasPage({ searchParams }: PageProps<'/app/esca
   const pdvMap = await pdvsPorServico(ativos.map((s) => s.id));
 
   const hist = escalas.length && vista === 'dia' ? await db.select().from(escalaHistorico).where(inArray(escalaHistorico.escalaId, escalas.map((e) => e.id))) : [];
-  const nome = (id: string | null) => refs.nome(id);
   const candidatas = pessoas.filter((p) => p.estado === 'ativa').map((p) => ({ id: p.id, nome: p.nome, equipaId: p.equipaId, equipa: refs.equipas.get(p.equipaId ?? '')?.nome ?? '' }));
   const ocupadas = escalas.filter((e) => !['cancelada', 'substituida'].includes(e.estado)).map((e) => ({ promotoraId: e.promotoraId, data: e.data, hi: hm(e.horaInicio), hf: hm(e.horaFim) }));
 
   return (
     <div className="page">
-      <PageHead eyebrow="Planeamento & controlo de campo" title="Escalas & Presenças" desc="Crie escalas, acompanhe presenças, faltas, atrasos e substituições.">
+      <PageHead eyebrow={t('escalas.eyebrow')} title={t('escalas.title')} desc={t('escalas.desc')}>
         <NovaEscala
           servicos={ativos.map((s) => ({ id: s.id, nome: s.nome, equipaId: s.equipaId, pdvs: (pdvMap.get(s.id) ?? []).map((id) => ({ id, nome: refs.pdvs.get(id)?.nome ?? '' })) }))}
           pessoas={candidatas}
@@ -53,53 +55,49 @@ export default async function EscalasPage({ searchParams }: PageProps<'/app/esca
           <table className="table">
             <thead>
               <tr>
-                <th>Horário</th>
-                <th>Promotora</th>
-                <th>Serviço / PDV</th>
-                <th>Escala</th>
-                <th>Presença</th>
-                <th style={{ textAlign: 'right' }}>Ações</th>
+                <th>{t('escalas.thHorario')}</th>
+                <th>{t('escalas.thPromotora')}</th>
+                <th>{t('escalas.thServico')}</th>
+                <th>{t('escalas.thEscala')}</th>
+                <th>{t('escalas.thPresenca')}</th>
+                <th style={{ textAlign: 'right' }}>{t('escalas.thAcoes')}</th>
               </tr>
             </thead>
             <tbody>
               {escalas.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="empty">Sem escalas em {fmtDia(data)}.</td>
+                  <td colSpan={6} className="empty">{t('escalas.semEscalasDia', { dia: fmtDia(data, t.intl) })}</td>
                 </tr>
               )}
               {escalas
                 .sort((a, b) => a.horaInicio.localeCompare(b.horaInicio) || refs.nome(a.promotoraId).localeCompare(refs.nome(b.promotoraId)))
                 .map((e) => (
                   <tr key={e.id}>
-                    <td className="strong" style={{ whiteSpace: 'nowrap' }}>
-                      {hm(e.horaInicio)}–{hm(e.horaFim)}
-                    </td>
+                    <td className="strong" style={{ whiteSpace: 'nowrap' }}>{hm(e.horaInicio)}–{hm(e.horaFim)}</td>
                     <td>
                       <div className="strong">{refs.nome(e.promotoraId)}</div>
-                      {e.substitutaId && <div className="small muted">→ substituída por {refs.nome(e.substitutaId)}</div>}
+                      {e.substitutaId && <div className="small muted">{t('escalas.substituidaPor', { nome: refs.nome(e.substitutaId) })}</div>}
                     </td>
                     <td>
                       <div>{refs.servicos.get(e.servicoId)?.nome}</div>
                       <div className="small muted">{refs.pdvs.get(e.pdvId)?.nome}</div>
                     </td>
-                    <td>
-                      <StatusBadge value={e.estado} />
-                    </td>
+                    <td><StatusBadge value={e.estado} /></td>
                     <td>
                       {e.presencaEstado ? (
                         <div className="row" style={{ gap: 6 }}>
                           <StatusBadge value={e.presencaEstado} />
                           <span className="small muted">{hm(e.presencaHora)}</span>
-                          {e.presencaValidada && <span className="small muted" title="Validada pelo supervisor">✔</span>}
+                          {e.presencaValidada && <span className="small muted" title={t('escalas.validada')}>✔</span>}
                         </div>
                       ) : (
-                        <span className="small muted">Por confirmar</span>
+                        <span className="small muted">{t('escalas.porConfirmar')}</span>
                       )}
                     </td>
                     <td>
                       <EscalaRowActions
                         escala={{ id: e.id, data: e.data, hi: hm(e.horaInicio), hf: hm(e.horaFim), promotoraId: e.promotoraId, promotora: refs.nome(e.promotoraId), pdv: refs.pdvs.get(e.pdvId)?.nome ?? '', ativa: e.estado === 'planeada' || e.estado === 'confirmada', porValidar: !!e.presencaEstado && !e.presencaValidada && e.presencaEstado !== 'falta' }}
-                        historico={hist.filter((h) => h.escalaId === e.id).sort((a, b) => +a.data - +b.data).map((h) => ({ id: h.id, texto: h.texto, quem: nome(h.userId), data: h.data.toISOString() }))}
+                        historico={hist.filter((h) => h.escalaId === e.id).sort((a, b) => +a.data - +b.data).map((h) => ({ id: h.id, texto: h.texto, params: h.params, quem: refs.nome(h.userId), data: h.data }))}
                         candidatas={candidatas.filter((c) => c.id !== e.promotoraId)}
                         ocupadas={ocupadas}
                       />
@@ -114,11 +112,9 @@ export default async function EscalasPage({ searchParams }: PageProps<'/app/esca
           <table className="table week">
             <thead>
               <tr>
-                <th>Pessoa</th>
+                <th>{t('escalas.thPessoa')}</th>
                 {semana.map((d) => (
-                  <th key={d} className={d === hoje() ? 'today' : ''}>
-                    {fmtDia(d, { weekday: 'short', day: '2-digit', month: '2-digit' })}
-                  </th>
+                  <th key={d} className={d === hoje() ? 'today' : ''}>{fmtDia(d, t.intl, { weekday: 'short', day: '2-digit', month: '2-digit' })}</th>
                 ))}
               </tr>
             </thead>
@@ -134,9 +130,7 @@ export default async function EscalasPage({ searchParams }: PageProps<'/app/esca
                           .filter((e) => e.promotoraId === pid && e.data === d)
                           .map((e) => (
                             <a key={e.id} className={`slot s-${e.estado}`} href={`/app/escalas?data=${d}${servicoId ? `&servico=${servicoId}` : ''}`}>
-                              <b>
-                                {hm(e.horaInicio)}–{hm(e.horaFim)}
-                              </b>
+                              <b>{hm(e.horaInicio)}–{hm(e.horaFim)}</b>
                               <span>{refs.pdvs.get(e.pdvId)?.nome}</span>
                             </a>
                           ))}
@@ -145,9 +139,7 @@ export default async function EscalasPage({ searchParams }: PageProps<'/app/esca
                   </tr>
                 ))}
               {escalas.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="empty">Sem escalas nesta semana.</td>
-                </tr>
+                <tr><td colSpan={8} className="empty">{t('escalas.semEscalasSemana')}</td></tr>
               )}
             </tbody>
           </table>

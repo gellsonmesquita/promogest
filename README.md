@@ -45,6 +45,16 @@ src/
   app/m/…               App de campo (mobile): promotora, merchandising
 ```
 
+## Idiomas (i18n)
+
+Português e inglês. O seletor PT/EN está na barra superior (web), no ecrã de login, no cabeçalho "Hoje" e no Perfil (mobile). A escolha fica num cookie (`pg_lang`); na primeira visita usa o idioma do browser (`Accept-Language`) e, se não for PT nem EN, usa português.
+
+- `src/i18n/dictionaries/pt.ts`: dicionário de referência. `en.ts` tem de ter **as mesmas chaves** (o TypeScript dá erro se faltar alguma).
+- Server Components e Server Actions: `const t = await getT()` · Client Components: `const t = useT()`.
+- `t('secao.chave', { param })`: as chaves são tipadas e a interpolação usa `{param}`. Datas: `fmtDia(iso, t.intl)`.
+- Histórico, notificações e auditoria são guardados na BD como **chave + `params`** (ex.: `ev.nRejeitado`, `{ motivo }`) e traduzidos ao mostrar, no idioma de quem lê. O que o utilizador escreve (motivos, observações, nomes) não é traduzido.
+- Para acrescentar um idioma: criar `dictionaries/xx.ts`, registá-lo em `src/i18n/core.ts` (`LOCALES`, `DICTIONARIES`, `INTL_LOCALE`).
+
 ## Segurança e permissões
 
 - A autorização é feita **no servidor** em cada página e ação: promotora vê só as suas escalas, supervisor só as que lhe estão atribuídas, gestão vê tudo.

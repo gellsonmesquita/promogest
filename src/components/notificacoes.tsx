@@ -2,25 +2,27 @@
 
 import { useRouter } from 'next/navigation';
 import { marcarLida, marcarTodasLidas } from '@/app/actions/cadastros';
+import { useT } from '@/i18n/client';
+import { fmtDataHora } from '@/lib/dates';
 import { useAction } from './toast';
 import { Icon } from './ui';
-import { fmtDataHora } from '@/lib/dates';
 
-type N = { id: string; texto: string; link: string | null; lida: boolean; data: string };
+type N = { id: string; texto: string; params: Record<string, string | number | null> | null; link: string | null; lida: boolean; data: Date };
 
 export function NotificacoesLista({ items }: { items: N[] }) {
+  const t = useT();
   const router = useRouter();
   const { pending, exec } = useAction();
   const naoLidas = items.filter((n) => !n.lida).length;
   return (
     <>
       <div className="page-head">
-        <div><h1>Notificações</h1></div>
-        {naoLidas > 0 && <button className="btn sm" disabled={pending} onClick={() => exec(marcarTodasLidas)}>Marcar todas como lidas</button>}
+        <div><h1>{t('notif.title')}</h1></div>
+        {naoLidas > 0 && <button className="btn sm" disabled={pending} onClick={() => exec(marcarTodasLidas)}>{t('notif.marcarTodas')}</button>}
       </div>
       <div className="card" style={{ padding: '4px 16px' }}>
         <div className="list">
-          {items.length === 0 && <div className="empty">Sem notificações.</div>}
+          {items.length === 0 && <div className="empty">{t('notif.vazio')}</div>}
           {items.map((n) => (
             <button
               key={n.id}
@@ -33,8 +35,8 @@ export function NotificacoesLista({ items }: { items: N[] }) {
             >
               <Icon name="bell" size={18} style={{ color: 'var(--gold)' }} />
               <div style={{ flex: 1 }}>
-                <div>{n.texto}</div>
-                <div className="small muted" style={{ fontWeight: 400 }}>{fmtDataHora(n.data)}</div>
+                <div>{t.dyn(n.texto, n.params)}</div>
+                <div className="small muted" style={{ fontWeight: 400 }}>{fmtDataHora(n.data, t.intl)}</div>
               </div>
               {!n.lida && <span style={{ width: 9, height: 9, borderRadius: '50%', background: 'var(--gold)' }} />}
             </button>

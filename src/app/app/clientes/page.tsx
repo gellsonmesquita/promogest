@@ -4,13 +4,16 @@ import Link from 'next/link';
 import { PageHead } from '@/components/ui';
 import { db } from '@/db';
 import { clientes, marcas, pdvs, servicos } from '@/db/schema';
+import { getT } from '@/i18n/server';
 import { GESTAO, requireUser } from '@/lib/auth';
 import { ClienteBtn, MarcaBtn, PdvBtn } from './clientes-client';
 
-export const metadata: Metadata = { title: 'Clientes, Marcas & PDVs' };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())('nav.clientes') };
+}
 
 export default async function ClientesPage({ searchParams }: PageProps<'/app/clientes'>) {
-  await requireUser(GESTAO);
+  const [, t] = await Promise.all([requireUser(GESTAO), getT()]);
   const sp = await searchParams;
   const tab = sp.tab === 'marcas' || sp.tab === 'pdvs' ? sp.tab : 'clientes';
   const [cs, ms, ps, nServ] = await Promise.all([
@@ -23,23 +26,28 @@ export default async function ClientesPage({ searchParams }: PageProps<'/app/cli
 
   return (
     <div className="page">
-      <PageHead eyebrow="Cadastros" title="Clientes, Marcas & PDVs" desc="Dados comerciais e contratos. Não são visíveis para promotoras.">
+      <PageHead eyebrow={t('clientes.eyebrow')} title={t('clientes.title')} desc={t('clientes.desc')}>
         {tab === 'clientes' && <ClienteBtn />}
         {tab === 'marcas' && <MarcaBtn clientes={clientesOpt} />}
         {tab === 'pdvs' && <PdvBtn />}
       </PageHead>
       <div className="filters">
         <div className="tabs">
-          <Link href="/app/clientes" className={tab === 'clientes' ? 'active' : ''}>Clientes ({cs.length})</Link>
-          <Link href="/app/clientes?tab=marcas" className={tab === 'marcas' ? 'active' : ''}>Marcas & produtos ({ms.length})</Link>
-          <Link href="/app/clientes?tab=pdvs" className={tab === 'pdvs' ? 'active' : ''}>PDVs / locais ({ps.length})</Link>
+          <Link href="/app/clientes" className={tab === 'clientes' ? 'active' : ''}>{t('clientes.tabClientes', { n: cs.length })}</Link>
+          <Link href="/app/clientes?tab=marcas" className={tab === 'marcas' ? 'active' : ''}>{t('clientes.tabMarcas', { n: ms.length })}</Link>
+          <Link href="/app/clientes?tab=pdvs" className={tab === 'pdvs' ? 'active' : ''}>{t('clientes.tabPdvs', { n: ps.length })}</Link>
         </div>
       </div>
 
       <div className="table-wrap">
         {tab === 'clientes' && (
           <table className="table">
-            <thead><tr><th>Cliente</th><th>NIF</th><th>Responsável</th><th>Contacto</th><th>Contratos</th><th>Serviços</th><th /></tr></thead>
+            <thead>
+              <tr>
+                <th>{t('clientes.thCliente')}</th><th>{t('clientes.thNif')}</th><th>{t('clientes.thResponsavel')}</th><th>{t('clientes.thContacto')}</th>
+                <th>{t('clientes.thContratos')}</th><th>{t('clientes.thServicos')}</th><th />
+              </tr>
+            </thead>
             <tbody>
               {cs.map((c) => (
                 <tr key={c.id} style={c.ativo ? undefined : { opacity: 0.5 }}>
@@ -57,7 +65,7 @@ export default async function ClientesPage({ searchParams }: PageProps<'/app/cli
         )}
         {tab === 'marcas' && (
           <table className="table">
-            <thead><tr><th>Marca</th><th>Cliente</th><th>Produtos</th><th /></tr></thead>
+            <thead><tr><th>{t('clientes.thMarca')}</th><th>{t('clientes.thCliente')}</th><th>{t('clientes.thProdutos')}</th><th /></tr></thead>
             <tbody>
               {ms.map((m) => (
                 <tr key={m.id}>
@@ -72,14 +80,14 @@ export default async function ClientesPage({ searchParams }: PageProps<'/app/cli
         )}
         {tab === 'pdvs' && (
           <table className="table">
-            <thead><tr><th>PDV</th><th>Endereço</th><th>Zona</th><th>Estado</th><th /></tr></thead>
+            <thead><tr><th>{t('clientes.thPdv')}</th><th>{t('clientes.thEndereco')}</th><th>{t('clientes.thZona')}</th><th>{t('clientes.thEstado')}</th><th /></tr></thead>
             <tbody>
               {ps.map((p) => (
                 <tr key={p.id} style={p.ativo ? undefined : { opacity: 0.5 }}>
                   <td className="strong">{p.nome}</td>
                   <td>{p.endereco}</td>
                   <td>{p.zona}</td>
-                  <td>{p.ativo ? 'Ativo' : 'Inativo'}</td>
+                  <td>{p.ativo ? t('common.active') : t('common.inactive')}</td>
                   <td><PdvBtn pdv={p} /></td>
                 </tr>
               ))}

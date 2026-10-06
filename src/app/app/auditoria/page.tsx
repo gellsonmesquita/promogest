@@ -1,28 +1,33 @@
 import type { Metadata } from 'next';
 import { PageHead } from '@/components/ui';
+import { getT } from '@/i18n/server';
 import { requireUser } from '@/lib/auth';
-import { fmtDataHora } from '@/lib/dates';
+import { DH_LONGO, fmtDataHora } from '@/lib/dates';
 import { getRefs, listAuditoria } from '@/lib/queries';
 
-export const metadata: Metadata = { title: 'Auditoria' };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())('nav.auditoria') };
+}
 
 export default async function AuditoriaPage() {
-  await requireUser(['admin']);
+  const [, t] = await Promise.all([requireUser(['admin']), getT()]);
   const [refs, rows] = await Promise.all([getRefs(), listAuditoria(300)]);
   return (
     <div className="page">
-      <PageHead eyebrow="Segurança" title="Registo de auditoria" desc="Ações importantes realizadas no sistema (últimas 300). Os dados históricos são arquivados, nunca apagados." />
+      <PageHead eyebrow={t('audit.eyebrow')} title={t('audit.title')} desc={t('audit.desc')} />
       <div className="table-wrap">
         <table className="table">
-          <thead><tr><th>Data/hora</th><th>Utilizador</th><th>Ação</th><th>Entidade</th><th>Detalhe</th></tr></thead>
+          <thead>
+            <tr><th>{t('audit.thData')}</th><th>{t('audit.thUser')}</th><th>{t('audit.thAcao')}</th><th>{t('audit.thEntidade')}</th><th>{t('audit.thDetalhe')}</th></tr>
+          </thead>
           <tbody>
             {rows.map((a) => (
               <tr key={a.id}>
-                <td style={{ whiteSpace: 'nowrap' }}>{fmtDataHora(a.data, { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{fmtDataHora(a.data, t.intl, DH_LONGO)}</td>
                 <td className="strong">{refs.nome(a.userId)}</td>
-                <td>{a.acao}</td>
-                <td><span className="chip">{a.entidade}</span></td>
-                <td>{a.detalhe}</td>
+                <td>{t.dyn(a.acao, a.params)}</td>
+                <td><span className="chip">{t.dyn(a.entidade)}</span></td>
+                <td>{t.dyn(a.detalhe, a.params)}</td>
               </tr>
             ))}
           </tbody>

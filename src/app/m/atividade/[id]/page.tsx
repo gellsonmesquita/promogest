@@ -5,16 +5,18 @@ import { notFound } from 'next/navigation';
 import { Icon } from '@/components/ui';
 import { db } from '@/db';
 import { servicos } from '@/db/schema';
+import { getT } from '@/i18n/server';
 import { FIELD_ROLES, requireUser } from '@/lib/auth';
 import { fmtDia, hm, hoje } from '@/lib/dates';
-import { ACAO_MERCH_LABEL } from '@/lib/labels';
 import { getEscala, getRefs, getRelatorioDaEscala, listFotos } from '@/lib/queries';
 import { Atividade } from './atividade-client';
 
-export const metadata: Metadata = { title: 'Atividade' };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())('m.atividade') };
+}
 
 export default async function AtividadePage({ params }: PageProps<'/m/atividade/[id]'>) {
-  const u = await requireUser(FIELD_ROLES);
+  const [u, t] = await Promise.all([requireUser(FIELD_ROLES), getT()]);
   const { id } = await params;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const e = await getEscala(u, id);
@@ -27,22 +29,22 @@ export default async function AtividadePage({ params }: PageProps<'/m/atividade/
   return (
     <>
       <header className="m-bar">
-        <Link href="/m/hoje" className="m-back" aria-label="Voltar"><Icon name="back" /></Link>
+        <Link href="/m/hoje" className="m-back" aria-label={t('common.back')}><Icon name="back" /></Link>
         <div style={{ minWidth: 0 }}>
-          <div className="small muted">{fmtDia(e.data)} · {hm(e.horaInicio)}–{hm(e.horaFim)}</div>
+          <div className="small muted">{fmtDia(e.data, t.intl)} · {hm(e.horaInicio)}–{hm(e.horaFim)}</div>
           <div className="strong ellipsis">{s.nome}</div>
         </div>
       </header>
       <div className="m-body" style={{ paddingBottom: 96 }}>
         <section className="card">
           <div className="kv" style={{ gridTemplateColumns: '1fr 1fr' }}>
-            <div><span className="label">Local / PDV</span><b>{pdv?.nome}</b><small className="muted">{pdv?.endereco}</small></div>
-            <div><span className="label">Cliente / marca</span><b>{refs.clientes.get(s.clienteId)?.nome} · {refs.marcas.get(s.marcaId)?.nome}</b></div>
-            <div><span className="label">Produto</span><b>{s.produto || '—'}</b></div>
-            {merch && <div><span className="label">Ação</span><b>{ACAO_MERCH_LABEL[s.acao ?? 'outro']} · prev. {s.qtdPrevista ?? 0}</b></div>}
-            <div className="full"><span className="label">Objetivo</span><span>{s.objetivo}</span></div>
-            {s.materiais && <div className="full"><span className="label">Materiais</span><span>{s.materiais}</span></div>}
-            {s.observacoes && <div className="full"><span className="label">Observações</span><span>{s.observacoes}</span></div>}
+            <div><span className="label">{t('m.pdv')}</span><b>{pdv?.nome}</b><small className="muted">{pdv?.endereco}</small></div>
+            <div><span className="label">{t('m.clienteMarca')}</span><b>{refs.clientes.get(s.clienteId)?.nome} · {refs.marcas.get(s.marcaId)?.nome}</b></div>
+            <div><span className="label">{t('m.produto')}</span><b>{s.produto || '—'}</b></div>
+            {merch && <div><span className="label">{t('m.acao')}</span><b>{t('m.acaoPrev', { acao: t(`acaoMerch.${s.acao ?? 'outro'}`), q: s.qtdPrevista ?? 0 })}</b></div>}
+            <div className="full"><span className="label">{t('m.objetivo')}</span><span>{s.objetivo}</span></div>
+            {s.materiais && <div className="full"><span className="label">{t('m.materiais')}</span><span>{s.materiais}</span></div>}
+            {s.observacoes && <div className="full"><span className="label">{t('m.observacoes')}</span><span>{s.observacoes}</span></div>}
           </div>
         </section>
 

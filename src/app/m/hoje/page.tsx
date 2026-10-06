@@ -1,17 +1,21 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Icon, StatusBadge } from '@/components/ui';
+import { Icon, LangSwitch, StatusBadge } from '@/components/ui';
 import { db } from '@/db';
 import { relatorios } from '@/db/schema';
+import type { TKey } from '@/i18n/core';
+import { getT } from '@/i18n/server';
 import { FIELD_ROLES, requireUser } from '@/lib/auth';
 import { fmtDia, hm, hoje } from '@/lib/dates';
 import { getRefs, listEscalas } from '@/lib/queries';
 
-export const metadata: Metadata = { title: 'Hoje' };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())('nav.hoje') };
+}
 
 export default async function HojePage() {
-  const u = await requireUser(FIELD_ROLES);
+  const [u, t] = await Promise.all([requireUser(FIELD_ROLES), getT()]);
   const dia = hoje();
   const [refs, escalas, rejeitados] = await Promise.all([
     getRefs(),
@@ -23,12 +27,12 @@ export default async function HojePage() {
   const proximas = ativas.filter((e) => e.data > dia).slice(0, 10);
   const rels = deHoje.length ? await db.select({ escalaId: relatorios.escalaId, estado: relatorios.estado }).from(relatorios).where(inArray(relatorios.escalaId, deHoje.map((e) => e.id))) : [];
 
-  const cta = (estado: string, rel?: string) => {
-    if (rel === 'rejeitado') return 'Corrigir relatório';
-    if (rel && rel !== 'rascunho') return 'Ver relatório';
-    if (estado === 'planeada') return 'Abrir e confirmar presença';
-    if (estado === 'falta') return 'Ver detalhes';
-    return 'Continuar atividade';
+  const cta = (estado: string, rel?: string): TKey => {
+    if (rel === 'rejeitado') return 'm.ctaCorrigir';
+    if (rel && rel !== 'rascunho') return 'm.ctaVer';
+    if (estado === 'planeada') return 'm.ctaConfirmar';
+    if (estado === 'falta') return 'm.ctaDetalhes';
+    return 'm.ctaContinuar';
   };
 
   return (
@@ -38,23 +42,24 @@ export default async function HojePage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.webp" alt="" className="hoje-logo" />
           <div className="spacer" />
-          <span className="hoje-date">{fmtDia(dia, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+          <span className="hoje-date">{fmtDia(dia, t.intl, { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+          <LangSwitch dark />
         </div>
-        <h1>Olá, {u.nome.split(' ')[0]} 👋</h1>
-        <p>{deHoje.length ? `Tem ${deHoje.length} atividade(s) hoje.` : 'Sem atividades para hoje.'}</p>
+        <h1>{t('m.hello', { nome: u.nome.split(' ')[0] })}</h1>
+        <p>{deHoje.length ? t('m.temAtividades', { n: deHoje.length }) : t('m.semAtividades')}</p>
       </header>
 
       <div className="m-body">
         {rejeitados.length > 0 && (
           <Link className="alert bad row" href={`/m/relatorios/${rejeitados[0].id}`}>
             <Icon name="warn" />
-            <span style={{ flex: 1 }}>{rejeitados.length} relatório(s) rejeitado(s): corrija e reenvie.</span>
+            <span style={{ flex: 1 }}>{t('m.rejeitados', { n: rejeitados.length })}</span>
             <Icon name="chevron" />
           </Link>
         )}
 
-        <h2 className="hoje-sec">Hoje</h2>
-        {deHoje.length === 0 && <div className="card empty">Dia livre. Aproveite! 🌴</div>}
+        <h2 className="hoje-sec">{t('m.hoje')}</h2>
+        {deHoje.length === 0 && <div className="card empty">{t('m.diaLivre')}</div>}
         {deHoje.map((e) => {
           const s = refs.servicos.get(e.servicoId);
           const rel = rels.find((r) => r.escalaId === e.id)?.estado;
@@ -68,20 +73,20 @@ export default async function HojePage() {
               <div className="hoje-title">{s?.nome}</div>
               <div className="row" style={{ gap: 6 }}><Icon name="pin" size={16} /> {refs.pdvs.get(e.pdvId)?.nome}</div>
               <div className="row muted" style={{ gap: 6 }}><Icon name="campaign" size={16} /> {refs.marcas.get(s?.marcaId ?? '')?.nome} · {s?.produto}</div>
-              <div className="hoje-cta">{cta(e.estado, rel)} <Icon name="chevron" size={18} /></div>
+              <div className="hoje-cta">{t(cta(e.estado, rel))} <Icon name="chevron" size={18} /></div>
             </Link>
           );
         })}
 
-        <h2 className="hoje-sec">Próximos dias</h2>
+        <h2 className="hoje-sec">{t('m.proximos')}</h2>
         <div className="card" style={{ padding: '4px 14px' }}>
           <div className="list">
-            {proximas.length === 0 && <div className="empty">Sem escalas futuras.</div>}
+            {proximas.length === 0 && <div className="empty">{t('m.semFuturas')}</div>}
             {proximas.map((e) => (
               <Link key={e.id} href={`/m/atividade/${e.id}`} className="item">
                 <div className="hoje-day">
-                  <b>{fmtDia(e.data, { day: '2-digit' })}</b>
-                  <span>{fmtDia(e.data, { weekday: 'short' })}</span>
+                  <b>{fmtDia(e.data, t.intl, { day: '2-digit' })}</b>
+                  <span>{fmtDia(e.data, t.intl, { weekday: 'short' })}</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="strong">{refs.servicos.get(e.servicoId)?.nome}</div>

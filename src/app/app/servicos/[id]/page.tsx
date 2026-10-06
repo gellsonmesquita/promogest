@@ -5,15 +5,18 @@ import { notFound } from 'next/navigation';
 import { Icon } from '@/components/ui';
 import { db } from '@/db';
 import { clientes, marcas, pdvs, users } from '@/db/schema';
+import { getT } from '@/i18n/server';
 import { requireUser, WEB_ROLES } from '@/lib/auth';
 import { addDays, hoje } from '@/lib/dates';
 import { getServico, isGestao } from '@/lib/queries';
 import { ServicoForm } from './servico-form';
 
-export const metadata: Metadata = { title: 'Serviço' };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())('nav.servicos') };
+}
 
 export default async function ServicoPage({ params }: PageProps<'/app/servicos/[id]'>) {
-  const u = await requireUser(WEB_ROLES);
+  const [u, t] = await Promise.all([requireUser(WEB_ROLES), getT()]);
   const { id } = await params;
   const novo = id === 'novo';
   if (novo && !isGestao(u)) notFound();
@@ -41,7 +44,7 @@ export default async function ServicoPage({ params }: PageProps<'/app/servicos/[
   return (
     <div className="page">
       <Link href="/app/servicos" className="row small strong mb" style={{ gap: 6 }}>
-        <Icon name="back" size={16} /> Serviços
+        <Icon name="back" size={16} /> {t('serv.voltar')}
       </Link>
       <ServicoForm
         inicial={inicial}

@@ -1,16 +1,19 @@
 import type { Metadata } from 'next';
 import { NotificacoesLista } from '@/components/notificacoes';
+import { getT } from '@/i18n/server';
 import { requireUser, WEB_ROLES } from '@/lib/auth';
 import { listNotificacoes } from '@/lib/queries';
 
-export const metadata: Metadata = { title: 'Notificações' };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getT())('notif.title') };
+}
 
 export default async function NotificacoesPage() {
   const u = await requireUser(WEB_ROLES);
   const items = await listNotificacoes(u);
   return (
     <div className="page" style={{ maxWidth: 820 }}>
-      <NotificacoesLista items={items.map((n) => ({ id: n.id, texto: n.texto, link: n.link, lida: n.lida, data: n.data.toISOString() }))} />
+      <NotificacoesLista items={items} />
     </div>
   );
 }

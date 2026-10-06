@@ -7,6 +7,7 @@ import { comunicarOcorrencia, confirmarPresenca, enviarFoto, enviarRelatorio, gu
 import { Modal } from '@/components/modal';
 import { useAction, useToast } from '@/components/toast';
 import { Icon, StatusBadge } from '@/components/ui';
+import { useT } from '@/i18n/client';
 import { fmtHora } from '@/lib/dates';
 import { fotoUrl } from '@/lib/labels';
 
@@ -32,6 +33,7 @@ async function comprimir(file: File, max = 1600, quality = 0.8): Promise<Blob> {
 }
 
 export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; merch: boolean; relatorio: Rel; fotos: Foto[] }) {
+  const t = useT();
   const router = useRouter();
   const toast = useToast();
   const { pending, exec } = useAction();
@@ -67,7 +69,7 @@ export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; me
         const res = await enviarFoto(fd);
         if (!res.ok) toast(res.error, true);
       } catch {
-        toast('Falha ao enviar a fotografia. Verifique a ligação.', true);
+        toast(t('m.erroUpload'), true);
       } finally {
         setAEnviar((n) => n - 1);
       }
@@ -78,7 +80,7 @@ export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; me
   if (!ativa && !relatorio.id) {
     return (
       <div className="card">
-        <div className="row"><StatusBadge value={escala.estado} /><span className="muted">Esta escala já não está ativa.</span></div>
+        <div className="row"><StatusBadge value={escala.estado} /><span className="muted">{t('m.inativa')}</span></div>
       </div>
     );
   }
@@ -89,7 +91,7 @@ export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; me
       <section className="card">
         <div className="step-h">
           <span className={`num${escala.presencaEstado ? ' done' : ''}`}>1</span>
-          <h3>Presença</h3>
+          <h3>{t('m.presenca')}</h3>
           <span className="spacer" />
           {escala.presencaEstado && <StatusBadge value={escala.presencaEstado} />}
         </div>
@@ -97,31 +99,31 @@ export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; me
           escala.eHoje ? (
             <>
               <button className="btn primary lg block" disabled={pending} onClick={() => exec(() => confirmarPresenca(escala.id))}>
-                <Icon name="check" /> Confirmar presença
+                <Icon name="check" /> {t('m.confirmar')}
               </button>
-              <p className="small muted" style={{ textAlign: 'center', marginTop: 8 }}>A hora é registada automaticamente.</p>
+              <p className="small muted" style={{ textAlign: 'center', marginTop: 8 }}>{t('m.horaAuto')}</p>
             </>
           ) : (
-            <p className="muted">A confirmação fica disponível no dia da escala.</p>
+            <p className="muted">{t('m.soNoDia')}</p>
           )
         ) : (
           <>
-            <p className="muted mb">Registada às <b>{escala.presencaHora}</b>.</p>
+            <p className="muted mb">{t('m.registadaAs', { hora: escala.presencaHora })}</p>
             {presente && editavel && escala.estado === 'confirmada' && (
               <div className="row">
                 {!escala.inicio ? (
                   <button className="btn dark lg" style={{ flex: 1 }} disabled={pending} onClick={() => exec(() => marcarAtividade(escala.id, 'inicio'))}>
-                    <Icon name="play" /> Iniciar atividade
+                    <Icon name="play" /> {t('m.iniciar')}
                   </button>
                 ) : !escala.fim ? (
                   <>
-                    <span className="chip">Início {fmtHora(escala.inicio)}</span>
+                    <span className="chip">{t('m.inicioAs', { hora: fmtHora(escala.inicio, t.intl) })}</span>
                     <button className="btn lg" style={{ flex: 1 }} disabled={pending} onClick={() => exec(() => marcarAtividade(escala.id, 'fim'))}>
-                      <Icon name="stop" /> Terminar
+                      <Icon name="stop" /> {t('m.terminar')}
                     </button>
                   </>
                 ) : (
-                  <span className="chip">{fmtHora(escala.inicio)} – {fmtHora(escala.fim)}</span>
+                  <span className="chip">{fmtHora(escala.inicio, t.intl)} – {fmtHora(escala.fim, t.intl)}</span>
                 )}
               </div>
             )}
@@ -132,15 +134,15 @@ export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; me
       {presente && (
         <>
           {relatorio.estado === 'rejeitado' && relatorio.motivoRejeicao && (
-            <div className="alert bad"><b>Rejeitado pelo supervisor:</b> {relatorio.motivoRejeicao}</div>
+            <div className="alert bad"><b>{t('m.rejeitadoPor')}</b> {relatorio.motivoRejeicao}</div>
           )}
 
           {!editavel && relatorio.id ? (
             <Link className="card row" href={`/m/relatorios/${relatorio.id}`} style={{ color: 'var(--ink)' }}>
               <Icon name="report" size={28} />
               <div style={{ flex: 1 }}>
-                <div className="strong">Relatório enviado</div>
-                <div className="small muted">Toque para ver o estado</div>
+                <div className="strong">{t('m.enviado')}</div>
+                <div className="small muted">{t('m.tocarEstado')}</div>
               </div>
               <StatusBadge value={relatorio.estado} />
             </Link>
@@ -150,7 +152,7 @@ export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; me
               {r.checklist.length > 0 && (
                 <section className="card">
                   <div className="step-h">
-                    <span className="num">2</span><h3>Checklist</h3><span className="spacer" />
+                    <span className="num">2</span><h3>{t('m.checklist')}</h3><span className="spacer" />
                     <span className="small muted">{r.checklist.filter((c) => c.ok).length}/{r.checklist.length}</span>
                   </div>
                   {r.checklist.map((c, i) => (
@@ -164,27 +166,27 @@ export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; me
 
               {/* 3. Fotos */}
               <section className="card">
-                <div className="step-h"><span className="num">3</span><h3>Fotografias</h3><span className="spacer" /><span className="small muted">{fotos.length}</span></div>
+                <div className="step-h"><span className="num">3</span><h3>{t('m.fotografias')}</h3><span className="spacer" /><span className="small muted">{fotos.length}</span></div>
                 {merch && (
                   <div className="tabs mb" style={{ width: '100%' }}>
                     {(['antes', 'durante', 'depois'] as const).map((f) => (
-                      <button key={f} type="button" style={{ flex: 1, textTransform: 'capitalize' }} className={fase === f ? 'active' : ''} onClick={() => setFase(f)}>
-                        {f} ({conta(f)})
+                      <button key={f} type="button" style={{ flex: 1 }} className={fase === f ? 'active' : ''} onClick={() => setFase(f)}>
+                        {t(`fase.${f}`)} ({conta(f)})
                       </button>
                     ))}
                   </div>
                 )}
                 <div className="row">
                   <label className="btn primary lg" style={{ flex: 1.4, cursor: 'pointer' }}>
-                    <Icon name="camera" /> Tirar foto
+                    <Icon name="camera" /> {t('m.tirarFoto')}
                     <input type="file" accept="image/*" capture="environment" hidden onChange={addFotos} />
                   </label>
                   <label className="btn lg" style={{ flex: 1, cursor: 'pointer' }}>
-                    <Icon name="image" /> Galeria
+                    <Icon name="image" /> {t('m.galeria')}
                     <input type="file" accept="image/*" multiple hidden onChange={addFotos} />
                   </label>
                 </div>
-                {aEnviar > 0 && <p className="small muted mt">A enviar {aEnviar} fotografia(s)…</p>}
+                {aEnviar > 0 && <p className="small muted mt">{t('m.aEnviar', { n: aEnviar })}</p>}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 12 }}>
                   {visiveis.map((f) => (
                     <div key={f.id} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -192,15 +194,15 @@ export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; me
                       <img src={fotoUrl(f.id)} alt="" style={{ width: '100%', aspectRatio: '4/3', objectFit: 'cover', borderRadius: 10 }} />
                       <button
                         type="button"
-                        aria-label="Remover"
+                        aria-label={t('m.remover')}
                         disabled={pending}
                         onClick={() => exec(() => removerFoto(f.id))}
                         style={{ position: 'absolute', top: 6, right: 6, width: 30, height: 30, borderRadius: '50%', border: 0, background: 'rgba(0,0,0,.6)', color: '#fff', display: 'grid', placeItems: 'center' }}
                       >
                         <Icon name="close" size={16} />
                       </button>
-                      <span style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,.6)', color: '#fff', fontSize: 10, padding: '2px 6px', borderRadius: 6 }}>{fmtHora(f.quando)}</span>
-                      <input className="input" style={{ height: 34, fontSize: 12 }} placeholder="Legenda (opcional)" value={legendas[f.id] ?? f.legenda} onChange={(e) => setLegendas({ ...legendas, [f.id]: e.target.value })} />
+                      <span style={{ position: 'absolute', top: 6, left: 6, background: 'rgba(0,0,0,.6)', color: '#fff', fontSize: 10, padding: '2px 6px', borderRadius: 6 }}>{fmtHora(f.quando, t.intl)}</span>
+                      <input className="input" style={{ height: 34, fontSize: 12 }} placeholder={t('m.legendaPh')} value={legendas[f.id] ?? f.legenda} onChange={(e) => setLegendas({ ...legendas, [f.id]: e.target.value })} />
                     </div>
                   ))}
                 </div>
@@ -208,53 +210,53 @@ export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; me
 
               {/* 4. Relatório */}
               <section className="card">
-                <div className="step-h"><span className="num">4</span><h3>Relatório</h3></div>
+                <div className="step-h"><span className="num">4</span><h3>{t('m.relatorio')}</h3></div>
                 <div className="grid-auto" style={{ gap: 12 }}>
                   <div className="field">
-                    <label htmlFor="r-at">Atividade realizada</label>
-                    <textarea id="r-at" className="input" rows={2} style={{ minHeight: 70 }} value={r.atividade} onChange={(e) => setR({ ...r, atividade: e.target.value })} placeholder="Ex.: Degustação e abordagem a clientes" />
+                    <label htmlFor="r-at">{t('m.atividade')}</label>
+                    <textarea id="r-at" className="input" rows={2} style={{ minHeight: 70 }} value={r.atividade} onChange={(e) => setR({ ...r, atividade: e.target.value })} placeholder={t('m.atividadePh')} />
                   </div>
                   <div className="field">
-                    <label htmlFor="r-q">{merch ? 'Quantidade executada' : 'Quantidade / contactos'}</label>
+                    <label htmlFor="r-q">{merch ? t('m.qtdMerch') : t('m.qtd')}</label>
                     <input id="r-q" className="input" style={{ height: 46, fontSize: 15 }} type="number" inputMode="numeric" min={0} value={r.quantidade} onChange={(e) => setR({ ...r, quantidade: Number(e.target.value) })} />
                   </div>
                   <div className="field">
-                    <label htmlFor="r-res">Resultados</label>
-                    <input id="r-res" className="input" style={{ height: 46, fontSize: 15 }} value={r.resultados} onChange={(e) => setR({ ...r, resultados: e.target.value })} placeholder="Ex.: 45 unidades vendidas" />
+                    <label htmlFor="r-res">{t('m.resultados')}</label>
+                    <input id="r-res" className="input" style={{ height: 46, fontSize: 15 }} value={r.resultados} onChange={(e) => setR({ ...r, resultados: e.target.value })} placeholder={t('m.resultadosPh')} />
                   </div>
                   {merch && (
                     <div className="field">
-                      <label htmlFor="r-mat">Material implementado</label>
+                      <label htmlFor="r-mat">{t('m.material')}</label>
                       <input id="r-mat" className="input" style={{ height: 46, fontSize: 15 }} value={r.material} onChange={(e) => setR({ ...r, material: e.target.value })} />
                     </div>
                   )}
                   <div className="field">
-                    <label htmlFor="r-obs">Observações</label>
+                    <label htmlFor="r-obs">{t('m.observacoesRel')}</label>
                     <textarea id="r-obs" className="input" rows={3} value={r.observacoes} onChange={(e) => setR({ ...r, observacoes: e.target.value })} />
                   </div>
                   <div className="field">
-                    <label htmlFor="r-oc">Ocorrências</label>
-                    <textarea id="r-oc" className="input" rows={2} style={{ minHeight: 70 }} value={r.ocorrencias} onChange={(e) => setR({ ...r, ocorrencias: e.target.value })} placeholder="Ruptura de stock, problemas no local…" />
+                    <label htmlFor="r-oc">{t('m.ocorrencias')}</label>
+                    <textarea id="r-oc" className="input" rows={2} style={{ minHeight: 70 }} value={r.ocorrencias} onChange={(e) => setR({ ...r, ocorrencias: e.target.value })} placeholder={t('m.ocorrenciasPh')} />
                   </div>
                 </div>
               </section>
               {erro && <div className="alert bad">{erro}</div>}
 
               <footer className="m-actions">
-                <button className="btn lg" disabled={pending || aEnviar > 0} onClick={() => exec(() => guardarRelatorio(escala.id, payload()))}>Guardar</button>
+                <button className="btn lg" disabled={pending || aEnviar > 0} onClick={() => exec(() => guardarRelatorio(escala.id, payload()))}>{t('m.guardar')}</button>
                 <button
                   className="btn primary lg"
                   style={{ flex: 1 }}
                   disabled={pending || aEnviar > 0}
                   onClick={() => {
-                    if (!fotos.length) return setErro('Adicione pelo menos uma fotografia como evidência.');
-                    if (merch && (!conta('antes') || !conta('depois'))) return setErro('Merchandising: são obrigatórias fotos de antes e de depois.');
-                    if (!r.atividade.trim()) return setErro('Descreva a atividade realizada.');
+                    if (!fotos.length) return setErro(t('m.erroFotos'));
+                    if (merch && (!conta('antes') || !conta('depois'))) return setErro(t('m.erroMerch'));
+                    if (!r.atividade.trim()) return setErro(t('m.erroAtividade'));
                     setErro(null);
                     exec(() => enviarRelatorio(escala.id, payload()), () => router.push('/m/relatorios'));
                   }}
                 >
-                  <Icon name="send" /> {relatorio.estado === 'rejeitado' ? 'Reenviar' : 'Enviar ao supervisor'}
+                  <Icon name="send" /> {relatorio.estado === 'rejeitado' ? t('m.reenviar') : t('m.enviar')}
                 </button>
               </footer>
             </>
@@ -264,16 +266,16 @@ export function Atividade({ escala, merch, relatorio, fotos }: { escala: Esc; me
 
       {ativa && (
         <button className="btn ghost block" onClick={() => setOcorr('')}>
-          <Icon name="warn" /> Comunicar ocorrência ao supervisor
+          <Icon name="warn" /> {t('m.ocorrenciaBtn')}
         </button>
       )}
 
       {ocorr !== null && (
-        <Modal title="Comunicar ocorrência" onClose={() => setOcorr(null)}>
-          <textarea className="input" rows={4} value={ocorr} onChange={(e) => setOcorr(e.target.value)} placeholder="Descreva o que aconteceu" autoFocus />
+        <Modal title={t('m.ocorrenciaTitulo')} onClose={() => setOcorr(null)}>
+          <textarea className="input" rows={4} value={ocorr} onChange={(e) => setOcorr(e.target.value)} placeholder={t('m.ocorrenciaPh')} autoFocus />
           <div className="modal-actions">
-            <button className="btn" onClick={() => setOcorr(null)}>Cancelar</button>
-            <button className="btn primary" disabled={!ocorr.trim() || pending} onClick={() => exec(() => comunicarOcorrencia(escala.id, ocorr), () => setOcorr(null))}>Enviar</button>
+            <button className="btn" onClick={() => setOcorr(null)}>{t('common.cancel')}</button>
+            <button className="btn primary" disabled={!ocorr.trim() || pending} onClick={() => exec(() => comunicarOcorrencia(escala.id, ocorr), () => setOcorr(null))}>{t('common.send')}</button>
           </div>
         </Modal>
       )}
