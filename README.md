@@ -45,9 +45,10 @@ Ao arrancar, o contentor corre `scripts/migrate.mjs` (aplica as migrações pend
 ### Coolify
 
 1. Recurso com Build Pack **Docker Compose**, ficheiro `docker-compose.yml`.
-2. **Environment Variables:**
-   - `DATABASE_URL`: se o Postgres estiver no mesmo servidor Coolify, use o URL interno da BD (mais rápido e sem expor a porta).
-   - `SESSION_SECRET`: string aleatória longa (`node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"`).
+2. **Environment Variables** (com "Is Build Variable?" desmarcado; o build não precisa delas):
+   - `PROMOGEST_DATABASE_URL`: se o Postgres estiver no mesmo servidor Coolify, use o URL interno da BD (mais rápido e sem expor a porta) e ative "Connect to Predefined Network".
+   - `PROMOGEST_SESSION_SECRET`: string aleatória longa (`node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"`).
+   - O compose mapeia-as para `DATABASE_URL`/`SESSION_SECRET` dentro do contentor.
 3. No serviço **app**, definir o domínio com a porta 3000 (ex.: `https://promogest.exemplo.ao:3000`) e fazer **Deploy**.
 
 Dados de demonstração (opcional, a partir da sua máquina, com `DATABASE_URL` da BD no `.env.local`): `npm run db:seed`.
@@ -55,7 +56,7 @@ Dados de demonstração (opcional, a partir da sua máquina, com `DATABASE_URL` 
 ### Outro servidor
 
 ```bash
-cp .env.example .env          # preencher DATABASE_URL e SESSION_SECRET
+cp .env.example .env          # preencher PROMOGEST_DATABASE_URL e PROMOGEST_SESSION_SECRET
 docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
 ```
 

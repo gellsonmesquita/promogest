@@ -1,5 +1,8 @@
 # PromoGest · Coolify (Build Pack: Docker Compose) — mesmo padrão do gcs-site.
-# Variáveis a definir no Coolify: DATABASE_URL e SESSION_SECRET. Domínio → porta 3000.
+# Variáveis a definir no Coolify (Environment Variables, sem "Is Build Variable?"):
+#   PROMOGEST_DATABASE_URL  postgres://user:pass@host:5432/bd   (URL interno do Postgres no Coolify)
+#   PROMOGEST_SESSION_SECRET  string aleatória longa
+# Domínio do serviço "app" com a porta 3000 (ex.: https://promogest.exemplo.ao:3000).
 # Fora do Coolify: docker compose -f docker-compose.yml -f docker-compose.local.yml up -d --build
 
 services:
@@ -9,6 +12,6 @@ services:
       - "3000"
     restart: unless-stopped
     environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - SESSION_SECRET=${SESSION_SECRET}
+      - DATABASE_URL=${PROMOGEST_DATABASE_URL}
+      - SESSION_SECRET=${PROMOGEST_SESSION_SECRET}
       - TZ=Africa/Luanda

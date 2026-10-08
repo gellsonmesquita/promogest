@@ -5,11 +5,21 @@ import postgres from 'postgres';
 
 const url = process.env.DATABASE_URL;
 if (!url || !/^postgres(ql)?:\/\//.test(url)) {
-  console.error('[migrate] DATABASE_URL em falta ou inválido (esperado postgres://user:pass@host:porta/bd).');
+  // Mostra só o início do valor recebido (nunca a password) para ajudar a perceber o que está configurado.
+  const recebido = url ? `começa por "${url.slice(0, 12)}…" (${url.length} caracteres)` : 'vazio';
+  console.error(`[migrate] DATABASE_URL inválido: ${recebido}. Esperado postgres://user:pass@host:porta/bd.`);
+  console.error('[migrate] No Coolify, defina PROMOGEST_DATABASE_URL em Environment Variables e faça Redeploy.');
   process.exit(1);
 }
 if (!process.env.SESSION_SECRET) {
-  console.error('[migrate] SESSION_SECRET não definido.');
+  console.error('[migrate] SESSION_SECRET vazio. No Coolify, defina PROMOGEST_SESSION_SECRET e faça Redeploy.');
+  process.exit(1);
+}
+try {
+  const u = new URL(url);
+  console.log(`[migrate] A ligar a ${u.hostname}:${u.port || 5432}${u.pathname}…`);
+} catch {
+  console.error('[migrate] DATABASE_URL não é um URL válido (caracteres especiais na password têm de ser codificados, ex.: @ → %40).');
   process.exit(1);
 }
 
