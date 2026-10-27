@@ -11,6 +11,7 @@ import { fail, okMsg, run, type ActionResult } from '@/lib/action';
 import { assertUser, GESTAO } from '@/lib/auth';
 import { ev, k } from '@/lib/events';
 import { ACOES_MERCH, ROLES, SERVICO_TIPOS } from '@/lib/labels';
+import { AUSENCIA_TIPOS, PASSWORD_TEMP_MIN, PASSWORD_TEMPORARIA } from '@/lib/pessoas';
 
 const uuidOpt = z.string().uuid().optional().or(z.literal('').transform(() => undefined));
 const lines = (xs: string[]) => xs.map((x) => x.trim()).filter(Boolean);
@@ -155,6 +156,8 @@ export async function guardarMarca(input: z.input<typeof marcaSchema>): Promise<
 const pdvSchema = z.object({
   id: uuidOpt,
   nome: z.string().trim().min(2, 'err.indiqueNome'),
+  cadeia: z.string().trim().default(''),
+  kam: z.string().trim().default(''),
   endereco: z.string().default(''),
   zona: z.string().default(''),
   ativo: z.boolean().default(true),
@@ -175,15 +178,29 @@ export async function guardarPdv(input: z.input<typeof pdvSchema>): Promise<Acti
 }
 
 // ---------- pessoas ----------
+const vazioParaNull = (v: string | undefined) => (v && v.trim() ? v.trim() : null);
+const dataOpt = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .optional()
+  .or(z.literal('').transform(() => undefined));
+
 const userSchema = z.object({
   id: uuidOpt,
   nome: z.string().trim().min(2, 'err.indiqueNome'),
-  email: z.string().trim().toLowerCase().email('err.emailInvalido'),
+  email: z.string().trim().toLowerCase().email('err.emailInvalido').optional().or(z.literal('')),
+  numeroFuncionario: z.string().trim().optional().or(z.literal('')),
   telefone: z.string().default(''),
   role: z.enum(ROLES),
   equipaId: uuidOpt,
+  pdvId: uuidOpt,
   zona: z.string().default(''),
+  centroCusto: z.string().trim().default(''),
+  dataAdmissao: dataOpt,
   estado: z.enum(['ativa', 'inativa', 'suspensa']),
+  ausenciaTipo: z.enum(AUSENCIA_TIPOS).optional().or(z.literal('').transform(() => undefined)),
+  ausenteAte: dataOpt,
+  observacoes: z.string().max(2000).default(''),
   password: z.string().optional().or(z.literal('')),
 });
 
@@ -191,12 +208,24 @@ export async function guardarUser(input: z.input<typeof userSchema>): Promise<Ac
   return run(async () => {
     const u = await assertUser(GESTAO);
     const p = parse(userSchema, input);
+    const email = vazioParaNull(p.email);
+    const numero = vazioParaNull(p.numeroFuncionario);
+    if (!email && !numero) fail('err.idObrigatorio');
     if (u.role !== 'admin' && (p.role === 'admin' || p.role === 'gestor')) fail('err.soAdmin');
     if (p.id === u.id && p.estado !== 'ativa') fail('err.inativarPropria');
-    if (!p.id && (!p.password || p.password.length < 8)) fail('err.pwInicial');
-    if (p.id && p.password && p.password.length < 8) fail('err.pwMin');
-    const [dup] = await db.select({ id: users.id }).from(users).where(and(eq(users.email, p.email), p.id ? ne(users.id, p.id) : undefined));
-    if (dup) fail('err.emailDuplicado');
+    // Palavra-passe definida pela gestão é temporária (troca obrigatória), por isso aceita o mínimo de 6.
+    const minimo = p.id === u.id ? 8 : PASSWORD_TEMP_MIN;
+    if (!p.id && (!p.password || p.password.length < minimo)) fail('err.pwInicial');
+    if (p.id && p.password && p.password.length < minimo) fail(p.id === u.id ? 'err.pwMin' : 'err.pwInicial');
+    const outro = p.id ? ne(users.id, p.id) : undefined;
+    if (email && (await db.select({ id: users.id }).from(users).where(and(eq(users.email, email), outro))).length) fail('err.emailDuplicado');
+    if (numero && (await db.select({ id: users.id }).from(users).where(and(eq(users.numeroFuncionario, numero), outro))).length) fail('err.numeroDuplicado');
+
+    const campos = {
+      nome: p.nome, email, numeroFuncionario: numero, telefone: p.telefone, equipaId: p.equipaId ?? null, pdvId: p.pdvId ?? null,
+      zona: p.zona, centroCusto: p.centroCusto, dataAdmissao: p.dataAdmissao ?? null, estado: p.estado,
+      ausenciaTipo: p.ausenciaTipo ?? null, ausenteAte: p.ausenciaTipo ? (p.ausenteAte ?? null) : null, observacoes: p.observacoes,
+    };
 
     await db.transaction(async (tx) => {
       if (p.id) {
@@ -206,15 +235,16 @@ export async function guardarUser(input: z.input<typeof userSchema>): Promise<Ac
         await tx
           .update(users)
           .set({
-            nome: p.nome, email: p.email, telefone: p.telefone, role: u.role === 'admin' ? p.role : atual.role, equipaId: p.equipaId ?? null, zona: p.zona, estado: p.estado,
-            ...(p.password ? { passwordHash: await bcrypt.hash(p.password, 10) } : {}),
+            ...campos, role: u.role === 'admin' ? p.role : atual.role,
+            // Palavra-passe definida por outra pessoa tem de ser trocada pelo próprio no próximo acesso.
+            ...(p.password ? { passwordHash: await bcrypt.hash(p.password, 10), trocarPassword: atual.id !== u.id } : {}),
           })
           .where(eq(users.id, p.id));
         if (p.role === 'supervisor' && p.equipaId) await tx.update(equipas).set({ supervisorId: p.id }).where(eq(equipas.id, p.equipaId));
       } else {
         const [novo] = await tx
           .insert(users)
-          .values({ nome: p.nome, email: p.email, telefone: p.telefone, role: p.role, equipaId: p.equipaId ?? null, zona: p.zona, estado: p.estado, passwordHash: await bcrypt.hash(p.password!, 10) })
+          .values({ ...campos, role: p.role, passwordHash: await bcrypt.hash(p.password!, 10), trocarPassword: true })
           .returning({ id: users.id });
         if (p.role === 'supervisor' && p.equipaId) await tx.update(equipas).set({ supervisorId: novo.id }).where(eq(equipas.id, p.equipaId));
       }
@@ -224,6 +254,22 @@ export async function guardarUser(input: z.input<typeof userSchema>): Promise<Ac
     });
     revalidatePath('/app', 'layout');
     return okMsg('ok.pessoa');
+  });
+}
+
+/** Repõe a palavra-passe temporária (123456) e obriga a pessoa a trocá-la no próximo acesso. */
+export async function reporPassword(userId: string): Promise<ActionResult> {
+  return run(async () => {
+    const u = await assertUser(GESTAO);
+    const [alvo] = await db.select().from(users).where(eq(users.id, userId));
+    if (!alvo) fail('err.userNaoEncontrado');
+    if (u.role !== 'admin' && (alvo.role === 'admin' || alvo.role === 'gestor')) fail('err.semPermUser');
+    await db.transaction(async (tx) => {
+      await tx.update(users).set({ passwordHash: await bcrypt.hash(PASSWORD_TEMPORARIA, 10), trocarPassword: true }).where(eq(users.id, userId));
+      await ev.auditar(tx, u.id, 'ev.aReporPassword', 'ev.eUtilizador', alvo.nome);
+    });
+    revalidatePath('/app', 'layout');
+    return okMsg('ok.passwordReposta', { nome: alvo.nome, pw: PASSWORD_TEMPORARIA });
   });
 }
 

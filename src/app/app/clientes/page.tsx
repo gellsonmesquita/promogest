@@ -19,7 +19,7 @@ export default async function ClientesPage({ searchParams }: PageProps<'/app/cli
   const [cs, ms, ps, nServ] = await Promise.all([
     db.select().from(clientes).orderBy(asc(clientes.nome)),
     db.select().from(marcas).orderBy(asc(marcas.nome)),
-    db.select().from(pdvs).orderBy(asc(pdvs.nome)),
+    db.select().from(pdvs).orderBy(asc(pdvs.cadeia), asc(pdvs.nome)),
     db.select({ clienteId: servicos.clienteId, n: sql<number>`count(*)::int` }).from(servicos).groupBy(servicos.clienteId),
   ]);
   const clientesOpt = cs.map((c) => ({ id: c.id, nome: c.nome }));
@@ -80,11 +80,18 @@ export default async function ClientesPage({ searchParams }: PageProps<'/app/cli
         )}
         {tab === 'pdvs' && (
           <table className="table">
-            <thead><tr><th>{t('clientes.thPdv')}</th><th>{t('clientes.thEndereco')}</th><th>{t('clientes.thZona')}</th><th>{t('clientes.thEstado')}</th><th /></tr></thead>
+            <thead>
+              <tr>
+                <th>{t('clientes.thPdv')}</th><th>{t('clientes.thCadeia')}</th><th>{t('clientes.thKam')}</th>
+                <th>{t('clientes.thEndereco')}</th><th>{t('clientes.thZona')}</th><th>{t('clientes.thEstado')}</th><th />
+              </tr>
+            </thead>
             <tbody>
               {ps.map((p) => (
                 <tr key={p.id} style={p.ativo ? undefined : { opacity: 0.5 }}>
                   <td className="strong">{p.nome}</td>
+                  <td>{p.cadeia ? <span className="chip">{p.cadeia}</span> : <span className="muted small">{t('clientes.independente')}</span>}</td>
+                  <td>{p.kam || '—'}</td>
                   <td>{p.endereco}</td>
                   <td>{p.zona}</td>
                   <td>{p.ativo ? t('common.active') : t('common.inactive')}</td>

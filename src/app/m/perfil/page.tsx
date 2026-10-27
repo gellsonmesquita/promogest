@@ -1,5 +1,6 @@
 import { and, eq, sql } from 'drizzle-orm';
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { logout } from '@/app/actions/auth';
 import { Icon, LangSwitch } from '@/components/ui';
 import { db } from '@/db';
@@ -32,9 +33,11 @@ export default async function PerfilPage() {
       <div className="card">
         <div className="list">
           {[
-            [t('m.email'), u.email],
-            [t('m.telefone'), u.telefone],
-            [t('m.zona'), u.zona],
+            [t('m.numero'), u.numeroFuncionario ?? '—'],
+            [t('m.loja'), refs.pdvs.get(u.pdvId ?? '')?.nome ?? '—'],
+            [t('m.email'), u.email ?? '—'],
+            [t('m.telefone'), u.telefone || '—'],
+            [t('m.zona'), u.zona || '—'],
             [t('m.supervisor'), refs.nome(equipa?.supervisorId)],
           ].map(([k, v]) => (
             <div className="item" key={k}>
@@ -52,6 +55,7 @@ export default async function PerfilPage() {
         <div className="kpi"><div className="kpi-label">{t('m.executadas')}</div><div className="kpi-value">{ex.n}</div></div>
         <div className="kpi"><div className="kpi-label">{t('m.aprovados')}</div><div className="kpi-value">{ap.n}</div></div>
       </div>
+      <Link href="/conta/password" className="btn lg block">{t('m.alterarPw')}</Link>
       <form action={logout}>
         <button className="btn danger lg block"><Icon name="logout" /> {t('nav.logout')}</button>
       </form>

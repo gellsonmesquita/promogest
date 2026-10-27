@@ -93,13 +93,13 @@ export function MarcaBtn({ marca, clientes }: { marca?: Marca; clientes: { id: s
   );
 }
 
-type Pdv = { id?: string; nome: string; endereco: string; zona: string; ativo: boolean };
+type Pdv = { id?: string; nome: string; cadeia: string; kam: string; endereco: string; zona: string; ativo: boolean };
 
 export function PdvBtn({ pdv }: { pdv?: Pdv }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const { pending, exec } = useAction();
-  const blank: Pdv = { nome: '', endereco: '', zona: '', ativo: true };
+  const blank: Pdv = { nome: '', cadeia: '', kam: '', endereco: '', zona: '', ativo: true };
   const [p, setP] = useState<Pdv>(pdv ?? blank);
   const close = () => setOpen(false);
   return (
@@ -110,6 +110,8 @@ export function PdvBtn({ pdv }: { pdv?: Pdv }) {
           <form onSubmit={(e) => { e.preventDefault(); exec(() => guardarPdv(p), close); }}>
             <div className="form-grid">
               <div className="field full"><label htmlFor="d-n">{t('clientes.fNome')}</label><input id="d-n" className="input" required value={p.nome} onChange={(e) => setP({ ...p, nome: e.target.value })} /></div>
+              <div className="field"><label htmlFor="d-c">{t('clientes.fCadeia')}</label><input id="d-c" className="input" value={p.cadeia} onChange={(e) => setP({ ...p, cadeia: e.target.value })} /></div>
+              <div className="field"><label htmlFor="d-k">{t('clientes.fKam')}</label><input id="d-k" className="input" value={p.kam} onChange={(e) => setP({ ...p, kam: e.target.value })} /></div>
               <div className="field full"><label htmlFor="d-e">{t('clientes.fEndereco')}</label><input id="d-e" className="input" value={p.endereco} onChange={(e) => setP({ ...p, endereco: e.target.value })} /></div>
               <div className="field"><label htmlFor="d-z">{t('clientes.fZona')}</label><input id="d-z" className="input" value={p.zona} onChange={(e) => setP({ ...p, zona: e.target.value })} /></div>
               <label className="check"><input type="checkbox" checked={p.ativo} onChange={(e) => setP({ ...p, ativo: e.target.checked })} /> {t('clientes.fAtivo')}</label>

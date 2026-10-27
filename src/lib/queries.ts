@@ -42,7 +42,7 @@ export function servicoScope(u: User): SQL | undefined {
 export const getRefs = cache(async () => {
   const [us, ps, ss, cs, ms, es] = await Promise.all([
     db.select({ id: users.id, nome: users.nome, role: users.role, equipaId: users.equipaId, estado: users.estado }).from(users),
-    db.select({ id: pdvs.id, nome: pdvs.nome, endereco: pdvs.endereco, zona: pdvs.zona }).from(pdvs),
+    db.select({ id: pdvs.id, nome: pdvs.nome, cadeia: pdvs.cadeia, endereco: pdvs.endereco, zona: pdvs.zona }).from(pdvs),
     db.select({ id: servicos.id, nome: servicos.nome, tipo: servicos.tipo, produto: servicos.produto, clienteId: servicos.clienteId, marcaId: servicos.marcaId, supervisorId: servicos.supervisorId }).from(servicos),
     db.select({ id: clientes.id, nome: clientes.nome }).from(clientes),
     db.select({ id: marcas.id, nome: marcas.nome, clienteId: marcas.clienteId }).from(marcas),
@@ -173,6 +173,12 @@ export async function pdvsPorServico(servicoIds: string[]) {
 }
 
 // ---------- pessoas ----------
+/** Campos de uma pessoa visíveis na gestão de equipas (sem hash de palavra-passe). */
+const pessoaCols = {
+  id: users.id, nome: users.nome, email: users.email, numeroFuncionario: users.numeroFuncionario, telefone: users.telefone,
+  role: users.role, equipaId: users.equipaId, pdvId: users.pdvId, zona: users.zona, centroCusto: users.centroCusto,
+  dataAdmissao: users.dataAdmissao, estado: users.estado, ausenciaTipo: users.ausenciaTipo, ausenteAte: users.ausenteAte, observacoes: users.observacoes,
+};
 export async function equipasVisiveis(u: User) {
   if (isGestao(u)) return db.select().from(equipas).orderBy(asc(equipas.nome));
   if (u.role === 'supervisor') return db.select().from(equipas).where(eq(equipas.supervisorId, u.id));
@@ -184,7 +190,7 @@ export async function equipaDeCampo(u: User) {
   const eqs = await equipasVisiveis(u);
   if (!eqs.length) return [];
   return db
-    .select({ id: users.id, nome: users.nome, email: users.email, telefone: users.telefone, role: users.role, equipaId: users.equipaId, zona: users.zona, estado: users.estado })
+    .select(pessoaCols)
     .from(users)
     .where(and(inArray(users.equipaId, eqs.map((e) => e.id)), inArray(users.role, ['promotora', 'merchandiser'])))
     .orderBy(asc(users.nome));
@@ -192,7 +198,7 @@ export async function equipaDeCampo(u: User) {
 
 export async function listUsers() {
   return db
-    .select({ id: users.id, nome: users.nome, email: users.email, telefone: users.telefone, role: users.role, equipaId: users.equipaId, zona: users.zona, estado: users.estado })
+    .select(pessoaCols)
     .from(users)
     .orderBy(asc(users.role), asc(users.nome));
 }

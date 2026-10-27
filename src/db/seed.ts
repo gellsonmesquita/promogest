@@ -31,6 +31,10 @@ function placeholder(label: string, hue: number): Buffer {
 
 async function main() {
   const force = process.argv.includes('--force');
+  if (force && process.env.ALLOW_DEMO_SEED !== '1') {
+    console.log('Recusado: --force APAGA todos os dados (incluindo dados reais). Para confirmar, defina ALLOW_DEMO_SEED=1.');
+    return;
+  }
   const [{ count }] = await db.select({ count: sql<number>`count(*)::int` }).from(s.users);
   if (count > 0 && !force) {
     console.log(`A BD já tem ${count} utilizadores. Use --force para apagar tudo e voltar a gerar.`);

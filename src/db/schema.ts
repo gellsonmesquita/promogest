@@ -40,16 +40,31 @@ export type EvParams = Record<string, string | number | null>;
 const createdAt = () => timestamp('created_at', { withTimezone: true }).defaultNow().notNull();
 
 // ---------- pessoas ----------
+export const ausenciaTipoEnum = pgEnum('ausencia_tipo', ['ferias', 'luto', 'licenca_maternidade', 'doenca', 'acidente', 'outro']);
+
 export const users = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
   nome: text('nome').notNull(),
-  email: text('email').notNull().unique(),
+  /** Opcional: pessoal de campo entra com o nº de funcionário. */
+  email: text('email').unique(),
+  /** Nº de funcionário (Emp Id), ex.: 009630 — também serve de login. */
+  numeroFuncionario: text('numero_funcionario').unique(),
   telefone: text('telefone').notNull().default(''),
   passwordHash: text('password_hash').notNull(),
+  /** Obriga a definir nova palavra-passe no próximo login (contas criadas com palavra-passe inicial). */
+  trocarPassword: boolean('trocar_password').notNull().default(false),
   role: roleEnum('role').notNull(),
   equipaId: uuid('equipa_id').references((): AnyPgColumn => equipas.id),
+  /** Loja/PDV fixo onde a pessoa trabalha habitualmente. */
+  pdvId: uuid('pdv_id').references((): AnyPgColumn => pdvs.id),
   zona: text('zona').notNull().default(''),
+  centroCusto: text('centro_custo').notNull().default(''),
+  dataAdmissao: date('data_admissao'),
   estado: estadoPessoaEnum('estado').notNull().default('ativa'),
+  /** Ausência temporária (férias, licença…). Sem data de regresso = até indicação em contrário. */
+  ausenciaTipo: ausenciaTipoEnum('ausencia_tipo'),
+  ausenteAte: date('ausente_ate'),
+  observacoes: text('observacoes').notNull().default(''),
   createdAt: createdAt(),
 });
 
@@ -85,6 +100,10 @@ export const marcas = pgTable('marcas', {
 export const pdvs = pgTable('pdvs', {
   id: uuid('id').primaryKey().defaultRandom(),
   nome: text('nome').notNull(),
+  /** Cadeia de retalho (KAC), ex.: Fresmart, Kibabo, Kero. Vazio = comércio tradicional/independente. */
+  cadeia: text('cadeia').notNull().default(''),
+  /** Key Account Manager responsável pela cadeia/loja. */
+  kam: text('kam').notNull().default(''),
   endereco: text('endereco').notNull().default(''),
   zona: text('zona').notNull().default(''),
   ativo: boolean('ativo').notNull().default(true),

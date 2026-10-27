@@ -15,6 +15,13 @@
       "when": 1791283020085,
       "tag": "0001_i18n_params",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793041482676,
+      "tag": "0002_pessoal_campo",
+      "breakpoints": true
     }
   ]
 }

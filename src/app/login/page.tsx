@@ -7,19 +7,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getT())('login.title') };
 }
 
-const DEMO = [
-  { nome: 'Administrador Noble', email: 'admin@noblegroup.ao', perfil: 'admin' },
-  { nome: 'Marta Fernandes', email: 'marta.fernandes@noblegroup.ao', perfil: 'gestor' },
-  { nome: 'Carlos Domingos', email: 'carlos.domingos@noblegroup.ao', perfil: 'supervisor' },
-  { nome: 'Paulo Neto', email: 'paulo.neto@noblegroup.ao', perfil: 'supMerch' },
-  { nome: 'Ana Lopes', email: 'ana.lopes@noblegroup.ao', perfil: 'promotora' },
-  { nome: 'Gaspar Manuel', email: 'gaspar.manuel@noblegroup.ao', perfil: 'merch' },
-] as const;
-
 export default async function LoginPage() {
   const t = await getT();
-  // As contas de demonstração só aparecem em desenvolvimento.
-  const demo = process.env.NODE_ENV !== 'production' ? DEMO.map((d) => ({ ...d, perfil: t(`login.demoRoles.${d.perfil}`) })) : [];
   return (
     <div className="login-wrap">
       <section className="login-brand">
@@ -34,7 +23,7 @@ export default async function LoginPage() {
         </div>
       </section>
       <section className="login-panel">
-        <LoginForm demo={demo} />
+        <LoginForm />
       </section>
       <style>{`
         .login-wrap { min-height: 100vh; display: grid; grid-template-columns: 1.05fr 1fr; }

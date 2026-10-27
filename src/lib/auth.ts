@@ -24,10 +24,13 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
   return u;
 });
 
-/** Exige sessão e (opcionalmente) um dos perfis indicados. */
+export const PASSWORD_PAGE = '/conta/password';
+
+/** Exige sessão e (opcionalmente) um dos perfis indicados. Contas com palavra-passe inicial vão primeiro defini-la. */
 export async function requireUser(roles?: Role[]): Promise<User> {
   const u = await getCurrentUser();
   if (!u) redirect('/login');
+  if (u.trocarPassword) redirect(PASSWORD_PAGE);
   if (roles && !roles.includes(u.role)) redirect(homeFor(u.role));
   return u;
 }
@@ -36,6 +39,7 @@ export async function requireUser(roles?: Role[]): Promise<User> {
 export async function assertUser(roles?: Role[]): Promise<User> {
   const u = await getCurrentUser();
   if (!u) fail('err.sessao');
+  if (u.trocarPassword) fail('err.trocarPassword');
   if (roles && !roles.includes(u.role)) fail('err.permissao');
   return u;
 }

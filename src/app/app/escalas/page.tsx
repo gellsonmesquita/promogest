@@ -35,7 +35,9 @@ export default async function EscalasPage({ searchParams }: PageProps<'/app/esca
   const pdvMap = await pdvsPorServico(ativos.map((s) => s.id));
 
   const hist = escalas.length && vista === 'dia' ? await db.select().from(escalaHistorico).where(inArray(escalaHistorico.escalaId, escalas.map((e) => e.id))) : [];
-  const candidatas = pessoas.filter((p) => p.estado === 'ativa').map((p) => ({ id: p.id, nome: p.nome, equipaId: p.equipaId, equipa: refs.equipas.get(p.equipaId ?? '')?.nome ?? '' }));
+  const candidatas = pessoas
+    .filter((p) => p.estado === 'ativa')
+    .map((p) => ({ id: p.id, nome: p.nome, equipaId: p.equipaId, equipa: refs.equipas.get(p.equipaId ?? '')?.nome ?? '', ausenciaTipo: p.ausenciaTipo, ausenteAte: p.ausenteAte }));
   const ocupadas = escalas.filter((e) => !['cancelada', 'substituida'].includes(e.estado)).map((e) => ({ promotoraId: e.promotoraId, data: e.data, hi: hm(e.horaInicio), hf: hm(e.horaFim) }));
 
   return (

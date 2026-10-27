@@ -7,10 +7,12 @@ import { Modal } from '@/components/modal';
 import { useAction } from '@/components/toast';
 import { Icon, Timeline } from '@/components/ui';
 import { useT } from '@/i18n/client';
+import type { TKey } from '@/i18n/core';
 import { addDays, fmtDia, overlaps } from '@/lib/dates';
+import { ausenteEm } from '@/lib/pessoas';
 
 type Ocupada = { promotoraId: string; data: string; hi: string; hf: string };
-type Pessoa = { id: string; nome: string; equipaId: string | null; equipa: string };
+type Pessoa = { id: string; nome: string; equipaId: string | null; equipa: string; ausenciaTipo: string | null; ausenteAte: string | null };
 
 export function EscalasToolbar({ vista, data, servicoId, hoje, servicos }: { vista: 'dia' | 'semana'; data: string; servicoId: string; hoje: string; servicos: { id: string; nome: string }[] }) {
   const router = useRouter();
@@ -53,7 +55,9 @@ export function EscalaRowActions({
   const t = useT();
   const { pending, exec } = useAction();
   const [modal, setModal] = useState<'subst' | 'hist' | 'cancel' | null>(null);
-  const livres = candidatas.filter((c) => !ocupadas.some((o) => o.promotoraId === c.id && o.data === escala.data && overlaps(escala.hi, escala.hf, o.hi, o.hf)));
+  const livres = candidatas.filter(
+    (c) => !ausenteEm(c, escala.data) && !ocupadas.some((o) => o.promotoraId === c.id && o.data === escala.data && overlaps(escala.hi, escala.hf, o.hi, o.hf)),
+  );
   const dia = fmtDia(escala.data, t.intl);
 
   return (
@@ -174,7 +178,10 @@ export function NovaEscala({ servicos, pessoas, dataInicial }: { servicos: Servi
                         checked={f.promotoraIds.includes(p.id)}
                         onChange={(e) => setF({ ...f, promotoraIds: e.target.checked ? [...f.promotoraIds, p.id] : f.promotoraIds.filter((x) => x !== p.id) })}
                       />
-                      <span>{p.nome} <span className="small muted">· {p.equipa}</span></span>
+                      <span>
+                        {p.nome} <span className="small muted">· {p.equipa}</span>
+                        {ausenteEm(p, f.de) && <span className="badge tone-warn" style={{ marginLeft: 6 }}>{t(`ausencia.${p.ausenciaTipo}` as TKey)}</span>}
+                      </span>
                     </label>
                   ))}
                 </div>

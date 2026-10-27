@@ -21,13 +21,13 @@ export default async function WebLayout({ children }: LayoutProps<'/app'>) {
           <Icon name="bell" />
           {naoLidas > 0 && <span className="dot">{naoLidas}</span>}
         </Link>
-        <div className="row" style={{ gap: 10, paddingLeft: 6 }}>
+        <Link href="/conta/password" className="row" style={{ gap: 10, paddingLeft: 6, color: 'inherit' }} title={t('conta.title')}>
           <span className="avatar">{iniciais(u.nome)}</span>
           <div className="me-txt">
             <div className="strong">{u.nome}</div>
             <div className="small muted">{t(`roles.${u.role}`)}</div>
           </div>
-        </div>
+        </Link>
         <form action={logout}>
           <button className="btn ghost" title={t('nav.logout')} aria-label={t('nav.logout')}>
             <Icon name="logout" />

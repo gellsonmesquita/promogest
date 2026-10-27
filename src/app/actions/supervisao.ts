@@ -9,6 +9,7 @@ import { fail, okMsg, run, type ActionResult } from '@/lib/action';
 import { assertUser, WEB_ROLES } from '@/lib/auth';
 import { addDays, agoraHHmm, hm, overlaps } from '@/lib/dates';
 import { ev, k } from '@/lib/events';
+import { ausenteEm } from '@/lib/pessoas';
 import { escalaScope } from '@/lib/queries';
 
 function refresh() {
@@ -82,6 +83,7 @@ export async function substituir(escalaId: string, substitutaId: string): Promis
       if (!['planeada', 'confirmada'].includes(e.estado)) fail('err.escalaInativa');
       const [sub] = await tx.select().from(users).where(eq(users.id, substitutaId));
       if (!sub || sub.estado !== 'ativa' || !['promotora', 'merchandiser'].includes(sub.role)) fail('err.substitutaInvalida');
+      if (ausenteEm(sub, e.data)) fail('err.ausente', { nome: sub.nome, tipo: k(`ausencia.${sub.ausenciaTipo}`) });
       if ((await conflitos(tx, sub.id, e.data, e.horaInicio, e.horaFim)).length) fail('err.jaTemEscala', { nome: sub.nome });
       const original = await nomeDe(tx, e.promotoraId);
 
@@ -161,7 +163,7 @@ export async function criarEscalas(input: z.input<typeof novaEscalaSchema>): Pro
       }
       for (const data of datas) {
         for (const p of pessoas) {
-          if ((await conflitos(tx, p.id, data, f.hi, f.hf)).length) {
+          if (ausenteEm(p, data) || (await conflitos(tx, p.id, data, f.hi, f.hf)).length) {
             ignoradas++;
             continue;
           }
